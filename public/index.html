@@ -28,19 +28,19 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                 <div class="text-4xl mb-3">📅</div>
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Calendar View</h3>
                 <p class="text-gray-600 text-sm mb-3">Track deals across dates</p>
                 <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Ready</span>
             </div>
-            <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                 <div class="text-4xl mb-3">💰</div>
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Price Tracking</h3>
                 <p class="text-gray-600 text-sm mb-3">Monitor price changes</p>
                 <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Ready</span>
             </div>
-            <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                 <div class="text-4xl mb-3">🤖</div>
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Javari AI</h3>
                 <p class="text-gray-600 text-sm mb-3">Autonomous learning</p>
@@ -48,9 +48,66 @@
             </div>
         </div>
 
+        <!-- API Testing Section -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">🧪 Test API Endpoints</h3>
+            <div class="space-y-3">
+                <button onclick="testAPI('/api/deals', 'deals')" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
+                    Test Deals API
+                </button>
+                <button onclick="testAPI('/api/javari', 'javari')" class="w-full bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition font-semibold">
+                    Test Javari AI API
+                </button>
+                <button onclick="testAPI('/api/calendar', 'calendar')" class="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-semibold">
+                    Test Calendar API
+                </button>
+            </div>
+            <div id="api-results" class="mt-4 p-4 bg-gray-50 rounded-lg hidden">
+                <h4 class="font-bold text-gray-900 mb-2">API Response:</h4>
+                <pre id="api-output" class="text-sm text-gray-700 overflow-auto max-h-64 bg-white p-3 rounded border"></pre>
+            </div>
+        </div>
+
+        <!-- Sample Calendar Preview -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">📅 Calendar Preview (Phase 2)</h3>
+            <div class="grid grid-cols-7 gap-2">
+                <div class="text-center font-bold text-gray-600 py-2">Sun</div>
+                <div class="text-center font-bold text-gray-600 py-2">Mon</div>
+                <div class="text-center font-bold text-gray-600 py-2">Tue</div>
+                <div class="text-center font-bold text-gray-600 py-2">Wed</div>
+                <div class="text-center font-bold text-gray-600 py-2">Thu</div>
+                <div class="text-center font-bold text-gray-600 py-2">Fri</div>
+                <div class="text-center font-bold text-gray-600 py-2">Sat</div>
+                
+                <div class="bg-gray-100 p-3 rounded text-center text-gray-400">1</div>
+                <div class="bg-gray-100 p-3 rounded text-center text-gray-400">2</div>
+                <div class="bg-green-100 p-3 rounded text-center hover:bg-green-200 cursor-pointer">
+                    <div class="font-bold">3</div>
+                    <div class="text-xs text-green-600">2 deals</div>
+                </div>
+                <div class="bg-gray-100 p-3 rounded text-center text-gray-400">4</div>
+                <div class="bg-blue-100 p-3 rounded text-center hover:bg-blue-200 cursor-pointer">
+                    <div class="font-bold">5</div>
+                    <div class="text-xs text-blue-600">5 deals</div>
+                </div>
+                <div class="bg-gray-100 p-3 rounded text-center text-gray-400">6</div>
+                <div class="bg-gray-100 p-3 rounded text-center text-gray-400">7</div>
+            </div>
+            <p class="text-sm text-gray-500 mt-4 text-center">This is a preview - full calendar with live data coming in Phase 2</p>
+        </div>
+
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white mb-8">
             <h3 class="text-2xl font-bold mb-4">🚀 Phase 2: Deal Aggregators</h3>
             <p class="text-blue-100 mb-4">Coming next: 6 automated deal aggregators via Supabase Edge Functions</p>
+            <ul class="space-y-2 text-blue-100">
+                <li>✨ Disney Parks Blog Scraper</li>
+                <li>✨ MouseSavers Monitor</li>
+                <li>✨ Disney Tourist Blog Parser</li>
+                <li>✨ DISboards Scanner</li>
+                <li>✨ AllEars.net Tracker</li>
+                <li>✨ Reddit r/WaltDisneyWorld Monitor</li>
+            </ul>
         </div>
 
         <div class="bg-white rounded-xl shadow-lg p-6">
@@ -68,6 +125,10 @@
                     <span class="text-gray-700 font-medium">Edge Functions</span>
                     <span class="text-purple-600 font-semibold">⚙️ Configured</span>
                 </div>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span class="text-gray-700 font-medium">Deal Aggregators</span>
+                    <span class="text-yellow-600 font-semibold">⏳ Phase 2</span>
+                </div>
             </div>
         </div>
     </main>
@@ -75,8 +136,41 @@
     <footer class="bg-white border-t mt-12">
         <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600">
             <p>Built with Cloudflare Pages + Supabase • Powered by Javari AI</p>
-            <p class="text-sm mt-2">MVP Version 1.0</p>
+            <p class="text-sm mt-2">MVP Version 1.0 - Deployed <span id="deploy-date"></span></p>
+            <p class="text-xs mt-2 text-gray-400">
+                🔗 <a href="https://github.com/CR-AudioViz-AI/crav-disney-tracker-cf" target="_blank" class="hover:text-blue-600">View on GitHub</a>
+            </p>
         </div>
     </footer>
+
+    <script>
+        document.getElementById('deploy-date').textContent = new Date().toLocaleDateString();
+
+        async function testAPI(endpoint, name) {
+            const resultsDiv = document.getElementById('api-results');
+            const outputPre = document.getElementById('api-output');
+            
+            resultsDiv.classList.remove('hidden');
+            outputPre.textContent = `Testing ${name} API...\n\nEndpoint: ${endpoint}\nStatus: Loading...`;
+            
+            try {
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                outputPre.textContent = `Endpoint: ${endpoint}\nStatus: ${response.status} ${response.ok ? '✅' : '❌'}\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                outputPre.textContent = `Endpoint: ${endpoint}\nStatus: Error ❌\n\nError: ${error.message}\n\nNote: APIs may not be configured yet. This will work in Phase 2 when connected to Supabase.`;
+            }
+        }
+
+        // Auto-scroll to results when they appear
+        const observer = new MutationObserver((mutations) => {
+            const results = document.getElementById('api-results');
+            if (!results.classList.contains('hidden')) {
+                results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+        observer.observe(document.getElementById('api-results'), { attributes: true, attributeFilter: ['class'] });
+    </script>
 </body>
 </html>
