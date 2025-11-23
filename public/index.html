@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disney Deal Tracker - MVP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold text-gray-900">🏰 Disney Deal Tracker</h1>
+            <p class="text-gray-600 mt-2">AI-Powered Disney World Resort Deal Monitoring - MVP</p>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-12">
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="text-center">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Welcome to Your Personal Deal Tracker</h2>
+                <p class="text-xl text-gray-600 mb-8">MVP Version 1.0 - Cloudflare + Supabase Stack</p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <div class="bg-green-100 text-green-800 px-6 py-3 rounded-lg font-semibold">✅ Cloudflare Pages</div>
+                    <div class="bg-blue-100 text-blue-800 px-6 py-3 rounded-lg font-semibold">✅ Supabase Functions</div>
+                    <div class="bg-purple-100 text-purple-800 px-6 py-3 rounded-lg font-semibold">✅ 100% Serverless</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="text-4xl mb-3">📅</div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Calendar View</h3>
+                <p class="text-gray-600 text-sm mb-3">Track deals across dates</p>
+                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Ready</span>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="text-4xl mb-3">💰</div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Price Tracking</h3>
+                <p class="text-gray-600 text-sm mb-3">Monitor price changes</p>
+                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Ready</span>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="text-4xl mb-3">🤖</div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Javari AI</h3>
+                <p class="text-gray-600 text-sm mb-3">Autonomous learning</p>
+                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Ready</span>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white mb-8">
+            <h3 class="text-2xl font-bold mb-4">🚀 Phase 2: Deal Aggregators</h3>
+            <p class="text-blue-100 mb-4">Coming next: 6 automated deal aggregators via Supabase Edge Functions</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">System Status</h3>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span class="text-gray-700 font-medium">Cloudflare Pages</span>
+                    <span class="text-green-600 font-semibold">✅ Deployed</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span class="text-gray-700 font-medium">Supabase Database</span>
+                    <span class="text-blue-600 font-semibold">🟦 Ready</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span class="text-gray-700 font-medium">Edge Functions</span>
+                    <span class="text-purple-600 font-semibold">⚙️ Configured</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600">
+            <p>Built with Cloudflare Pages + Supabase • Powered by Javari AI</p>
+            <p class="text-sm mt-2">MVP Version 1.0</p>
+        </div>
+    </footer>
+</body>
+</html>
