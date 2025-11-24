@@ -3,178 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Disney Deal Tracker - MVP</title>
+    <title>Disney Deal Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .deal-card:hover { transform: translateY(-2px); }
+        .calendar-day:hover { background-color: #dbeafe; }
+        .calendar-day.has-deals { background-color: #dcfce7; cursor: pointer; }
+        .calendar-day.has-deals:hover { background-color: #bbf7d0; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
-    <header class="bg-white shadow-sm border-b">
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 py-6">
-            <h1 class="text-3xl font-bold text-gray-900">🏰 Disney Deal Tracker</h1>
-            <p class="text-gray-600 mt-2">AI-Powered Disney World Resort Deal Monitoring - LIVE!</p>
+            <h1 class="text-3xl font-bold">🏰 Disney Deal Tracker</h1>
+            <p class="text-blue-100 mt-1">Find the best Walt Disney World resort deals</p>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-12">
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <div class="text-center">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">🎉 System is LIVE!</h2>
-                <p class="text-xl text-gray-600 mb-8">All APIs connected to Supabase database</p>
-                <div class="flex flex-wrap justify-center gap-4">
-                    <div class="bg-green-100 text-green-800 px-6 py-3 rounded-lg font-semibold">✅ Cloudflare Pages</div>
-                    <div class="bg-blue-100 text-blue-800 px-6 py-3 rounded-lg font-semibold">✅ Supabase Edge Functions</div>
-                    <div class="bg-purple-100 text-purple-800 px-6 py-3 rounded-lg font-semibold">✅ Database Connected</div>
-                </div>
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Stats Bar -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <div class="text-3xl font-bold text-blue-600" id="total-deals">-</div>
+                <div class="text-gray-600 text-sm">Active Deals</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <div class="text-3xl font-bold text-green-600" id="best-discount">-</div>
+                <div class="text-gray-600 text-sm">Best Discount</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <div class="text-3xl font-bold text-purple-600" id="resorts-count">4</div>
+                <div class="text-gray-600 text-sm">Resorts</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <div class="text-3xl font-bold text-orange-600" id="last-updated">-</div>
+                <div class="text-gray-600 text-sm">Last Updated</div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-                <div class="text-4xl mb-3">📅</div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Calendar View</h3>
-                <p class="text-gray-600 text-sm mb-3">Track deals across dates</p>
-                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">LIVE</span>
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Deals List -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b">
+                        <h2 class="text-xl font-bold text-gray-800">🔥 Current Deals</h2>
+                    </div>
+                    <div id="deals-container" class="divide-y">
+                        <div class="p-8 text-center text-gray-500">
+                            <div class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+                            <p>Loading deals...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-                <div class="text-4xl mb-3">💰</div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Price Tracking</h3>
-                <p class="text-gray-600 text-sm mb-3">Monitor price changes</p>
-                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">LIVE</span>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-                <div class="text-4xl mb-3">🤖</div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Javari AI</h3>
-                <p class="text-gray-600 text-sm mb-3">Autonomous learning</p>
-                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">LIVE</span>
-            </div>
-        </div>
 
-        <!-- API Testing Section -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">🧪 Test Live API Endpoints</h3>
-            <p class="text-sm text-gray-600 mb-4">All endpoints are connected to your Supabase database!</p>
-            <div class="space-y-3">
-                <button onclick="testAPI('deals')" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
-                    Test Deals API (Connected to Database)
-                </button>
-                <button onclick="testAPI('javari')" class="w-full bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition font-semibold">
-                    Test Javari AI API (Connected to Database)
-                </button>
-                <button onclick="testAPI('calendar')" class="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-semibold">
-                    Test Calendar API (Connected to Database)
-                </button>
-            </div>
-            <div id="api-results" class="mt-4 p-4 bg-gray-50 rounded-lg hidden">
-                <h4 class="font-bold text-gray-900 mb-2">API Response:</h4>
-                <pre id="api-output" class="text-sm text-gray-700 overflow-auto max-h-64 bg-white p-3 rounded border"></pre>
-            </div>
-        </div>
+            <!-- Calendar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b">
+                        <h2 class="text-xl font-bold text-gray-800">📅 Deal Calendar</h2>
+                        <p class="text-sm text-gray-600" id="calendar-month"></p>
+                    </div>
+                    <div class="p-4">
+                        <div class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-500 mb-2">
+                            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                        </div>
+                        <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                            <!-- Calendar days will be inserted here -->
+                        </div>
+                        <div class="mt-4 text-xs text-gray-500">
+                            <span class="inline-block w-3 h-3 bg-green-200 rounded mr-1"></span> Days with deals
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Sample Calendar Preview -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">📅 Calendar Preview (Phase 2)</h3>
-            <div class="grid grid-cols-7 gap-2">
-                <div class="text-center font-bold text-gray-600 py-2">Sun</div>
-                <div class="text-center font-bold text-gray-600 py-2">Mon</div>
-                <div class="text-center font-bold text-gray-600 py-2">Tue</div>
-                <div class="text-center font-bold text-gray-600 py-2">Wed</div>
-                <div class="text-center font-bold text-gray-600 py-2">Thu</div>
-                <div class="text-center font-bold text-gray-600 py-2">Fri</div>
-                <div class="text-center font-bold text-gray-600 py-2">Sat</div>
-                
-                <div class="bg-gray-100 p-3 rounded text-center text-gray-400">1</div>
-                <div class="bg-gray-100 p-3 rounded text-center text-gray-400">2</div>
-                <div class="bg-green-100 p-3 rounded text-center hover:bg-green-200 cursor-pointer">
-                    <div class="font-bold">3</div>
-                    <div class="text-xs text-green-600">2 deals</div>
-                </div>
-                <div class="bg-gray-100 p-3 rounded text-center text-gray-400">4</div>
-                <div class="bg-blue-100 p-3 rounded text-center hover:bg-blue-200 cursor-pointer">
-                    <div class="font-bold">5</div>
-                    <div class="text-xs text-blue-600">5 deals</div>
-                </div>
-                <div class="bg-gray-100 p-3 rounded text-center text-gray-400">6</div>
-                <div class="bg-gray-100 p-3 rounded text-center text-gray-400">7</div>
-            </div>
-            <p class="text-sm text-gray-500 mt-4 text-center">Full calendar with live data coming in Phase 2</p>
-        </div>
-
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white mb-8">
-            <h3 class="text-2xl font-bold mb-4">🚀 Phase 2: Deal Aggregators</h3>
-            <p class="text-blue-100 mb-4">Coming next: 6 automated deal aggregators via Supabase Edge Functions</p>
-            <ul class="space-y-2 text-blue-100">
-                <li>✨ Disney Parks Blog Scraper</li>
-                <li>✨ MouseSavers Monitor</li>
-                <li>✨ Disney Tourist Blog Parser</li>
-                <li>✨ DISboards Scanner</li>
-                <li>✨ AllEars.net Tracker</li>
-                <li>✨ Reddit r/WaltDisneyWorld Monitor</li>
-            </ul>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">System Status</h3>
-            <div class="space-y-3">
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span class="text-gray-700 font-medium">Cloudflare Pages</span>
-                    <span class="text-green-600 font-semibold">✅ Deployed</span>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span class="text-gray-700 font-medium">Supabase Database</span>
-                    <span class="text-green-600 font-semibold">✅ Connected</span>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span class="text-gray-700 font-medium">Edge Functions</span>
-                    <span class="text-green-600 font-semibold">✅ Live (3 active)</span>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span class="text-gray-700 font-medium">Deal Aggregators</span>
-                    <span class="text-yellow-600 font-semibold">⏳ Phase 2</span>
+                <!-- Quick Filters -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden mt-6">
+                    <div class="bg-gray-50 px-6 py-4 border-b">
+                        <h2 class="text-lg font-bold text-gray-800">🏨 Filter by Resort</h2>
+                    </div>
+                    <div class="p-4 space-y-2" id="resort-filters">
+                        <!-- Resort filters will be inserted here -->
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <footer class="bg-white border-t mt-12">
-        <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600">
-            <p>Built with Cloudflare Pages + Supabase Edge Functions • Powered by Javari AI</p>
-            <p class="text-sm mt-2">Version 2.0 - Fully Connected System - Deployed <span id="deploy-date"></span></p>
-            <p class="text-xs mt-2 text-gray-400">
-                🔗 <a href="https://github.com/CR-AudioViz-AI/crav-disney-tracker-cf" target="_blank" class="hover:text-blue-600">View on GitHub</a>
-            </p>
+    <!-- Deal Detail Modal -->
+    <div id="deal-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <span id="modal-badge" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold"></span>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                </div>
+                <h3 id="modal-title" class="text-2xl font-bold text-gray-900 mb-4"></h3>
+                <p id="modal-description" class="text-gray-600 mb-6"></p>
+                
+                <div class="space-y-3 mb-6">
+                    <div class="flex items-center text-gray-700">
+                        <span class="w-6">🏨</span>
+                        <span id="modal-resort" class="ml-2"></span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <span class="w-6">📅</span>
+                        <span id="modal-dates" class="ml-2"></span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <span class="w-6">🏷️</span>
+                        <span id="modal-type" class="ml-2"></span>
+                    </div>
+                </div>
+                
+                <a id="modal-link" href="#" target="_blank" class="block w-full bg-blue-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    View on Disney.com →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-gray-800 text-gray-400 mt-12 py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p>Disney Deal Tracker • Powered by Javari AI</p>
+            <p class="text-sm mt-1">Data updates automatically • Not affiliated with Disney</p>
         </div>
     </footer>
 
     <script>
-        document.getElementById('deploy-date').textContent = new Date().toLocaleDateString();
-
         const SUPABASE_URL = 'https://kteobfyferrukqeolofj.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0ZW9iZnlmZXJydWtxZW9sb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk2MjMxMDcsImV4cCI6MjA0NTE5OTEwN30.xK0YOdLjSLMnH-p91Q-WkSIDN_fZnHgwU46T9_l2lM8';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0ZW9iZnlmZXJydWtxZW9sb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk2MjMxMDcsImV4cCI6MjA0NTE5OTEwN30.xK0YOdLjSLMnH-p91Q-WkSIDN_fZnHgwU46T9_l2lM8';
+        
+        let allDeals = [];
+        let currentFilter = 'all';
 
-        async function testAPI(endpoint) {
-            const resultsDiv = document.getElementById('api-results');
-            const outputPre = document.getElementById('api-output');
-            
-            resultsDiv.classList.remove('hidden');
-            outputPre.textContent = `Testing ${endpoint} API...\n\nEndpoint: ${SUPABASE_URL}/functions/v1/${endpoint}\nStatus: Loading...`;
-            
+        // Load deals on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDeals();
+            renderCalendar();
+        });
+
+        async function loadDeals() {
             try {
-                const response = await fetch(`${SUPABASE_URL}/functions/v1/${endpoint}`, {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/deals`, {
                     headers: {
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
                         'Content-Type': 'application/json'
                     }
                 });
                 
                 const data = await response.json();
+                allDeals = data.deals || [];
                 
-                outputPre.textContent = `Endpoint: ${SUPABASE_URL}/functions/v1/${endpoint}\nStatus: ${response.status} ${response.ok ? '✅' : '❌'}\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                // Update stats
+                document.getElementById('total-deals').textContent = allDeals.length;
+                const discounts = allDeals.map(d => d.discount_percentage).filter(d => d);
+                document.getElementById('best-discount').textContent = discounts.length ? Math.max(...discounts) + '%' : 'N/A';
+                document.getElementById('last-updated').textContent = 'Now';
                 
-                // Auto-scroll to results
-                resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                // Render deals
+                renderDeals(allDeals);
+                renderResortFilters();
+                renderCalendar();
+                
             } catch (error) {
-                outputPre.textContent = `Endpoint: ${SUPABASE_URL}/functions/v1/${endpoint}\nStatus: Error ❌\n\nError: ${error.message}`;
+                console.error('Error loading deals:', error);
+                document.getElementById('deals-container').innerHTML = `
+                    <div class="p-8 text-center text-red-500">
+                        <p>Error loading deals. Please refresh.</p>
+                    </div>
+                `;
             }
         }
+
+        function renderDeals(deals) {
+            const container = document.getElementById('deals-container');
+            
+            if (deals.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-gray-500">
+                        <p>No deals found.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = deals.map(deal => `
+                <div class="deal-card p-6 hover:bg-gray-50 cursor-pointer transition" onclick='showDealModal(${JSON.stringify(deal).replace(/'/g, "\\'")})'>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-gray-900 text-lg flex-1 pr-4">${deal.title}</h3>
+                        ${deal.discount_percentage ? `
+                            <span class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap">
+                                ${deal.discount_percentage}% OFF
+                            </span>
+                        ` : `
+                            <span class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap">
+                                Special
+                            </span>
+                        `}
+                    </div>
+                    <p class="text-gray-600 text-sm mb-3 line-clamp-2">${deal.description || ''}</p>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-500">
+                            🏨 ${deal.resorts?.name || 'Disney Resort'}
+                        </span>
+                        <span class="text-gray-400">
+                            Valid until ${new Date(deal.valid_to).toLocaleDateString()}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderResortFilters() {
+            const resorts = [...new Set(allDeals.map(d => d.resorts?.name).filter(n => n))];
+            const container = document.getElementById('resort-filters');
+            
+            container.innerHTML = `
+                <button onclick="filterByResort('all')" class="w-full text-left px-3 py-2 rounded hover:bg-gray-100 ${currentFilter === 'all' ? 'bg-blue-100 text-blue-700' : ''}">
+                    All Resorts (${allDeals.length})
+                </button>
+                ${resorts.map(resort => {
+                    const count = allDeals.filter(d => d.resorts?.name === resort).length;
+                    return `
+                        <button onclick="filterByResort('${resort}')" class="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${currentFilter === resort ? 'bg-blue-100 text-blue-700' : ''}">
+                            ${resort.replace("Disney's ", '')} (${count})
+                        </button>
+                    `;
+                }).join('')}
+            `;
+        }
+
+        function filterByResort(resort) {
+            currentFilter = resort;
+            if (resort === 'all') {
+                renderDeals(allDeals);
+            } else {
+                renderDeals(allDeals.filter(d => d.resorts?.name === resort));
+            }
+            renderResortFilters();
+        }
+
+        function renderCalendar() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            
+            document.getElementById('calendar-month').textContent = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Find days with deals
+            const daysWithDeals = new Set();
+            allDeals.forEach(deal => {
+                const start = new Date(deal.valid_from);
+                const end = new Date(deal.valid_to);
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const date = new Date(year, month, d);
+                    if (date >= start && date <= end) {
+                        daysWithDeals.add(d);
+                    }
+                }
+            });
+            
+            let html = '';
+            
+            // Empty cells for days before first of month
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="p-2"></div>';
+            }
+            
+            // Days of month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const hasDeals = daysWithDeals.has(day);
+                const isToday = day === now.getDate();
+                html += `
+                    <div class="calendar-day p-2 text-center rounded text-sm ${hasDeals ? 'has-deals font-medium' : 'text-gray-400'} ${isToday ? 'ring-2 ring-blue-500' : ''}">
+                        ${day}
+                    </div>
+                `;
+            }
+            
+            document.getElementById('calendar-grid').innerHTML = html;
+        }
+
+        function showDealModal(deal) {
+            document.getElementById('modal-title').textContent = deal.title;
+            document.getElementById('modal-description').textContent = deal.description || 'No additional details available.';
+            document.getElementById('modal-resort').textContent = deal.resorts?.name || 'Disney Resort';
+            document.getElementById('modal-dates').textContent = `${new Date(deal.valid_from).toLocaleDateString()} - ${new Date(deal.valid_to).toLocaleDateString()}`;
+            document.getElementById('modal-type').textContent = deal.deal_type?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Special Offer';
+            document.getElementById('modal-link').href = deal.source_url || 'https://disneyworld.disney.go.com/special-offers/';
+            
+            if (deal.discount_percentage) {
+                document.getElementById('modal-badge').textContent = deal.discount_percentage + '% OFF';
+                document.getElementById('modal-badge').className = 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold';
+            } else {
+                document.getElementById('modal-badge').textContent = 'Special Offer';
+                document.getElementById('modal-badge').className = 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold';
+            }
+            
+            document.getElementById('deal-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('deal-modal').classList.remove('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('deal-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'deal-modal') closeModal();
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
     </script>
 </body>
 </html>
