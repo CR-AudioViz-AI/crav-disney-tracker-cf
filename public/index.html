@@ -119,7 +119,7 @@
             </div>
         </div>
 
-        <!-- HOTELS TAB - HONEST VERSION -->
+        <!-- HOTELS TAB -->
         <div id="hotels-tab" class="tab-content hidden">
             <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
                 <div class="bg-gradient-to-r from-blue-500 to-purple-500 px-6 py-6 text-white">
@@ -129,7 +129,7 @@
                 <div class="p-6">
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                         <p class="text-blue-800 text-sm">
-                            <strong>💡 How this works:</strong> Click "Check Availability" to go directly to the hotel's official booking page where you'll see <strong>real prices and availability</strong>. We also include Google Hotels links to compare prices across multiple booking sites.
+                            <strong>💡 How this works:</strong> Click "Check Availability" to go directly to the hotel's official booking page where you'll see <strong>real prices and availability</strong>. Use "Compare Prices" to search multiple booking sites.
                         </p>
                     </div>
                     
@@ -223,80 +223,63 @@
         let miniCalendarMonth = new Date(), currentMonth = new Date();
         let currentHotelFilter = 'all';
 
-        // VERIFIED WORKING HOTEL LINKS (tested Nov 2024)
+        // VERIFIED WORKING HOTEL LINKS - FIXED GOOGLE URLS
         const HOTELS = [
             // Disney Value Resorts
             { name: "Pop Century Resort", fullName: "Disney's Pop Century Resort", cat: 'disney', type: 'Value', price: 'From $169/night', rating: '4.2',
               url: 'https://disneyworld.disney.go.com/resorts/pop-century-resort/', 
-              google: 'https://www.google.com/travel/hotels/s/Disney%20Pop%20Century%20Resort%20Orlando',
               features: ['Skyliner Access', 'Food Court', 'Pool'] },
             { name: "Art of Animation Resort", fullName: "Disney's Art of Animation Resort", cat: 'disney', type: 'Value', price: 'From $189/night', rating: '4.4',
               url: 'https://disneyworld.disney.go.com/resorts/art-of-animation-resort/',
-              google: 'https://www.google.com/travel/hotels/s/Disney%20Art%20of%20Animation%20Resort',
               features: ['Skyliner Access', 'Family Suites', 'Themed Pools'] },
             { name: "All-Star Movies Resort", fullName: "Disney's All-Star Movies Resort", cat: 'disney', type: 'Value', price: 'From $149/night', rating: '4.0',
               url: 'https://disneyworld.disney.go.com/resorts/all-star-movies-resort/',
-              google: 'https://www.google.com/travel/hotels/s/Disney%20All%20Star%20Movies%20Resort',
               features: ['Bus Transport', 'Food Court', '2 Pools'] },
             // Disney Moderate Resorts
             { name: "Caribbean Beach Resort", fullName: "Disney's Caribbean Beach Resort", cat: 'disney', type: 'Moderate', price: 'From $249/night', rating: '4.1',
               url: 'https://disneyworld.disney.go.com/resorts/caribbean-beach-resort/',
-              google: 'https://www.google.com/travel/hotels/s/Disney%20Caribbean%20Beach%20Resort',
               features: ['Skyliner Access', 'Beach', 'Multiple Pools'] },
             { name: "Coronado Springs Resort", fullName: "Disney's Coronado Springs Resort", cat: 'disney', type: 'Moderate', price: 'From $259/night', rating: '4.2',
               url: 'https://disneyworld.disney.go.com/resorts/coronado-springs-resort/',
-              google: 'https://www.google.com/travel/hotels/s/Disney%20Coronado%20Springs%20Resort',
               features: ['Convention Center', 'Gran Destino Tower', 'Spa'] },
             // Disney Deluxe Resorts
             { name: "Grand Floridian Resort", fullName: "Disney's Grand Floridian Resort & Spa", cat: 'disney', type: 'Deluxe', price: 'From $649/night', rating: '4.7',
               url: 'https://disneyworld.disney.go.com/resorts/grand-floridian-resort-and-spa/',
-              google: 'https://www.google.com/travel/hotels/s/Disney%20Grand%20Floridian%20Resort',
               features: ['Monorail', 'Walk to Magic Kingdom', 'Spa', 'Fine Dining'] },
             { name: "Polynesian Village Resort", fullName: "Disney's Polynesian Village Resort", cat: 'disney', type: 'Deluxe', price: 'From $599/night', rating: '4.6',
               url: 'https://disneyworld.disney.go.com/resorts/polynesian-resort/',
-              google: 'https://www.google.com/travel/hotels/s/Disney%20Polynesian%20Resort',
               features: ['Monorail', 'Beach', "Trader Sam's", 'Fireworks View'] },
             { name: "Contemporary Resort", fullName: "Disney's Contemporary Resort", cat: 'disney', type: 'Deluxe', price: 'From $499/night', rating: '4.5',
               url: 'https://disneyworld.disney.go.com/resorts/contemporary-resort/',
-              google: 'https://www.google.com/travel/hotels/s/Disney%20Contemporary%20Resort',
               features: ['Monorail', 'Walk to Magic Kingdom', 'Rooftop Restaurant'] },
             { name: "Animal Kingdom Lodge", fullName: "Disney's Animal Kingdom Lodge", cat: 'disney', type: 'Deluxe', price: 'From $399/night', rating: '4.8',
               url: 'https://disneyworld.disney.go.com/resorts/animal-kingdom-lodge/',
-              google: 'https://www.google.com/travel/hotels/s/Disney%20Animal%20Kingdom%20Lodge',
               features: ['Savanna Views', 'African Dining', 'Animals'] },
             // Partner Hotels
             { name: "Drury Plaza Hotel Disney Springs", fullName: "Drury Plaza Hotel Orlando - Disney Springs", cat: 'partner', type: 'Partner Hotel', price: 'From $159/night', rating: '4.6',
               url: 'https://www.druryhotels.com/locations/orlando-fl/drury-plaza-hotel-orlando-disney-springs-area',
-              google: 'https://www.google.com/travel/hotels/s/Drury%20Plaza%20Hotel%20Disney%20Springs%20Orlando',
               features: ['Free Breakfast', 'Free Evening Reception', 'Pool'] },
             { name: "Hilton Buena Vista Palace", fullName: "Hilton Orlando Buena Vista Palace", cat: 'partner', type: 'Partner Hotel', price: 'From $189/night', rating: '4.4',
               url: 'https://www.hilton.com/en/hotels/mcoobhh-hilton-orlando-buena-vista-palace/',
-              google: 'https://www.google.com/travel/hotels/s/Hilton%20Buena%20Vista%20Palace%20Orlando',
               features: ['Disney Springs Walking', 'Spa', 'Multiple Restaurants'] },
             { name: "Wyndham Garden Disney Springs", fullName: "Wyndham Garden Lake Buena Vista", cat: 'partner', type: 'Partner Hotel', price: 'From $129/night', rating: '4.3',
               url: 'https://www.wyndhamhotels.com/wyndham-garden/lake-buena-vista-florida/wyndham-garden-lake-buena-vista-disney-springs-resort-area/overview',
-              google: 'https://www.google.com/travel/hotels/s/Wyndham%20Garden%20Lake%20Buena%20Vista',
               features: ['Near Disney Springs', 'Free Parking', 'Pool'] },
             { name: "DoubleTree Disney Springs", fullName: "DoubleTree Suites by Hilton - Disney Springs", cat: 'partner', type: 'Partner Hotel', price: 'From $179/night', rating: '4.3',
               url: 'https://www.hilton.com/en/hotels/mcoordt-doubletree-suites-by-hilton-orlando-disney-springs-area/',
-              google: 'https://www.google.com/travel/hotels/s/DoubleTree%20Suites%20Disney%20Springs%20Orlando',
               features: ['All Suites', 'Free Cookies', 'Disney Springs Walking'] },
             // Budget Options
             { name: "Comfort Suites Maingate", fullName: "Comfort Suites Maingate East", cat: 'budget', type: 'Budget Hotel', price: 'From $89/night', rating: '4.0',
               url: 'https://www.choicehotels.com/florida/kissimmee/comfort-suites-hotels/fl478',
-              google: 'https://www.google.com/travel/hotels/s/Comfort%20Suites%20Maingate%20East%20Kissimmee',
               features: ['Free Breakfast', 'Pool', 'Near Disney'] },
             { name: "Best Western Lake Buena Vista", fullName: "Best Western Lake Buena Vista Resort", cat: 'budget', type: 'Budget Hotel', price: 'From $99/night', rating: '3.9',
               url: 'https://www.bestwestern.com/en_US/book/hotels-in-orlando/best-western-lake-buena-vista-disney-springs-resort-area/propertyCode.10192.html',
-              google: 'https://www.google.com/travel/hotels/s/Best%20Western%20Lake%20Buena%20Vista%20Orlando',
               features: ['Free Shuttle', 'Pool', 'Near Disney Springs'] },
             { name: "La Quinta Orlando", fullName: "La Quinta Inn & Suites Orlando", cat: 'budget', type: 'Budget Hotel', price: 'From $79/night', rating: '4.1',
               url: 'https://www.wyndhamhotels.com/laquinta/kissimmee-florida/la-quinta-inn-and-suites-kissimmee-lake-buena-vista-south/overview',
-              google: 'https://www.google.com/travel/hotels/s/La%20Quinta%20Inn%20Kissimmee%20Lake%20Buena%20Vista',
               features: ['Free Breakfast', 'Pet Friendly', 'Pool'] },
             { name: "Holiday Inn Disney Springs", fullName: "Holiday Inn Orlando - Disney Springs", cat: 'budget', type: 'Budget Hotel', price: 'From $119/night', rating: '4.2',
               url: 'https://www.ihg.com/holidayinn/hotels/us/en/lake-buena-vista/mcods/hoteldetail',
-              google: 'https://www.google.com/travel/hotels/s/Holiday%20Inn%20Disney%20Springs%20Orlando',
               features: ['Near Disney Springs', 'Pool', 'Restaurant'] }
         ];
 
@@ -354,7 +337,7 @@
 
         function filterDeals(f) { currentFilter=f; filteredDeals = f==='all' ? allDeals : allDeals.filter(d=>d.resorts?.name===f); renderDeals(filteredDeals); renderFilters(); }
 
-        // HOTELS - Clean, working links
+        // HOTELS - FIXED COMPARE LINKS
         function filterHotels(cat) {
             currentHotelFilter = cat;
             document.querySelectorAll('.hotel-filter').forEach(b => { b.classList.remove('bg-blue-500','text-white'); b.classList.add('bg-gray-200','text-gray-700'); });
@@ -365,7 +348,12 @@
 
         function renderHotels() {
             const filtered = currentHotelFilter === 'all' ? HOTELS : HOTELS.filter(h => h.cat === currentHotelFilter);
-            document.getElementById('hotels-container').innerHTML = filtered.map(h => `
+            document.getElementById('hotels-container').innerHTML = filtered.map(h => {
+                // CORRECT Google Hotels URL format
+                const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(h.fullName + ' Orlando FL hotels')}&tbm=lcl`;
+                const tripAdvisorUrl = `https://www.tripadvisor.com/Search?q=${encodeURIComponent(h.fullName)}`;
+                
+                return `
                 <div class="hotel-card bg-white border rounded-xl p-5 transition">
                     <div class="flex flex-col md:flex-row gap-4">
                         <div class="flex-1">
@@ -382,17 +370,20 @@
                                 ${h.features.map(f => `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">${f}</span>`).join('')}
                             </div>
                         </div>
-                        <div class="flex flex-col gap-2 md:w-48">
+                        <div class="flex flex-col gap-2 md:w-52">
                             <a href="${h.url}" target="_blank" rel="noopener" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-medium text-center transition">
                                 Check Availability →
                             </a>
-                            <a href="${h.google}" target="_blank" rel="noopener" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm text-center transition">
-                                Compare on Google Hotels
+                            <a href="${googleUrl}" target="_blank" rel="noopener" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm text-center transition">
+                                🔍 Search Google
+                            </a>
+                            <a href="${tripAdvisorUrl}" target="_blank" rel="noopener" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm text-center transition">
+                                📖 TripAdvisor Reviews
                             </a>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // Calendar
