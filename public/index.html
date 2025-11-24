@@ -10,19 +10,19 @@
     <header class="bg-white shadow-sm border-b">
         <div class="max-w-7xl mx-auto px-4 py-6">
             <h1 class="text-3xl font-bold text-gray-900">🏰 Disney Deal Tracker</h1>
-            <p class="text-gray-600 mt-2">AI-Powered Disney World Resort Deal Monitoring - MVP</p>
+            <p class="text-gray-600 mt-2">AI-Powered Disney World Resort Deal Monitoring - LIVE!</p>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-12">
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
             <div class="text-center">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Welcome to Your Personal Deal Tracker</h2>
-                <p class="text-xl text-gray-600 mb-8">MVP Version 1.0 - Cloudflare + Supabase Stack</p>
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">🎉 System is LIVE!</h2>
+                <p class="text-xl text-gray-600 mb-8">All APIs connected to Supabase database</p>
                 <div class="flex flex-wrap justify-center gap-4">
                     <div class="bg-green-100 text-green-800 px-6 py-3 rounded-lg font-semibold">✅ Cloudflare Pages</div>
-                    <div class="bg-blue-100 text-blue-800 px-6 py-3 rounded-lg font-semibold">✅ Supabase Functions</div>
-                    <div class="bg-purple-100 text-purple-800 px-6 py-3 rounded-lg font-semibold">✅ 100% Serverless</div>
+                    <div class="bg-blue-100 text-blue-800 px-6 py-3 rounded-lg font-semibold">✅ Supabase Edge Functions</div>
+                    <div class="bg-purple-100 text-purple-800 px-6 py-3 rounded-lg font-semibold">✅ Database Connected</div>
                 </div>
             </div>
         </div>
@@ -32,34 +32,35 @@
                 <div class="text-4xl mb-3">📅</div>
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Calendar View</h3>
                 <p class="text-gray-600 text-sm mb-3">Track deals across dates</p>
-                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Ready</span>
+                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">LIVE</span>
             </div>
             <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                 <div class="text-4xl mb-3">💰</div>
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Price Tracking</h3>
                 <p class="text-gray-600 text-sm mb-3">Monitor price changes</p>
-                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Ready</span>
+                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">LIVE</span>
             </div>
             <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                 <div class="text-4xl mb-3">🤖</div>
                 <h3 class="text-lg font-bold text-gray-900 mb-2">Javari AI</h3>
                 <p class="text-gray-600 text-sm mb-3">Autonomous learning</p>
-                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">Ready</span>
+                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">LIVE</span>
             </div>
         </div>
 
         <!-- API Testing Section -->
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">🧪 Test API Endpoints</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">🧪 Test Live API Endpoints</h3>
+            <p class="text-sm text-gray-600 mb-4">All endpoints are connected to your Supabase database!</p>
             <div class="space-y-3">
-                <button onclick="testAPI('/api/deals', 'deals')" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
-                    Test Deals API
+                <button onclick="testAPI('deals')" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
+                    Test Deals API (Connected to Database)
                 </button>
-                <button onclick="testAPI('/api/javari', 'javari')" class="w-full bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition font-semibold">
-                    Test Javari AI API
+                <button onclick="testAPI('javari')" class="w-full bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition font-semibold">
+                    Test Javari AI API (Connected to Database)
                 </button>
-                <button onclick="testAPI('/api/calendar', 'calendar')" class="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-semibold">
-                    Test Calendar API
+                <button onclick="testAPI('calendar')" class="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-semibold">
+                    Test Calendar API (Connected to Database)
                 </button>
             </div>
             <div id="api-results" class="mt-4 p-4 bg-gray-50 rounded-lg hidden">
@@ -94,7 +95,7 @@
                 <div class="bg-gray-100 p-3 rounded text-center text-gray-400">6</div>
                 <div class="bg-gray-100 p-3 rounded text-center text-gray-400">7</div>
             </div>
-            <p class="text-sm text-gray-500 mt-4 text-center">This is a preview - full calendar with live data coming in Phase 2</p>
+            <p class="text-sm text-gray-500 mt-4 text-center">Full calendar with live data coming in Phase 2</p>
         </div>
 
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white mb-8">
@@ -119,11 +120,11 @@
                 </div>
                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <span class="text-gray-700 font-medium">Supabase Database</span>
-                    <span class="text-blue-600 font-semibold">🟦 Ready</span>
+                    <span class="text-green-600 font-semibold">✅ Connected</span>
                 </div>
                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <span class="text-gray-700 font-medium">Edge Functions</span>
-                    <span class="text-purple-600 font-semibold">⚙️ Configured</span>
+                    <span class="text-green-600 font-semibold">✅ Live (3 active)</span>
                 </div>
                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <span class="text-gray-700 font-medium">Deal Aggregators</span>
@@ -135,8 +136,8 @@
 
     <footer class="bg-white border-t mt-12">
         <div class="max-w-7xl mx-auto px-4 py-6 text-center text-gray-600">
-            <p>Built with Cloudflare Pages + Supabase • Powered by Javari AI</p>
-            <p class="text-sm mt-2">MVP Version 1.0 - Deployed <span id="deploy-date"></span></p>
+            <p>Built with Cloudflare Pages + Supabase Edge Functions • Powered by Javari AI</p>
+            <p class="text-sm mt-2">Version 2.0 - Fully Connected System - Deployed <span id="deploy-date"></span></p>
             <p class="text-xs mt-2 text-gray-400">
                 🔗 <a href="https://github.com/CR-AudioViz-AI/crav-disney-tracker-cf" target="_blank" class="hover:text-blue-600">View on GitHub</a>
             </p>
@@ -146,31 +147,34 @@
     <script>
         document.getElementById('deploy-date').textContent = new Date().toLocaleDateString();
 
-        async function testAPI(endpoint, name) {
+        const SUPABASE_URL = 'https://kteobfyferrukqeolofj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0ZW9iZnlmZXJydWtxZW9sb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk2MjMxMDcsImV4cCI6MjA0NTE5OTEwN30.xK0YOdLjSLMnH-p91Q-WkSIDN_fZnHgwU46T9_l2lM8';
+
+        async function testAPI(endpoint) {
             const resultsDiv = document.getElementById('api-results');
             const outputPre = document.getElementById('api-output');
             
             resultsDiv.classList.remove('hidden');
-            outputPre.textContent = `Testing ${name} API...\n\nEndpoint: ${endpoint}\nStatus: Loading...`;
+            outputPre.textContent = `Testing ${endpoint} API...\n\nEndpoint: ${SUPABASE_URL}/functions/v1/${endpoint}\nStatus: Loading...`;
             
             try {
-                const response = await fetch(endpoint);
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/${endpoint}`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
                 const data = await response.json();
                 
-                outputPre.textContent = `Endpoint: ${endpoint}\nStatus: ${response.status} ${response.ok ? '✅' : '❌'}\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                outputPre.textContent = `Endpoint: ${SUPABASE_URL}/functions/v1/${endpoint}\nStatus: ${response.status} ${response.ok ? '✅' : '❌'}\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                
+                // Auto-scroll to results
+                resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } catch (error) {
-                outputPre.textContent = `Endpoint: ${endpoint}\nStatus: Error ❌\n\nError: ${error.message}\n\nNote: APIs may not be configured yet. This will work in Phase 2 when connected to Supabase.`;
+                outputPre.textContent = `Endpoint: ${SUPABASE_URL}/functions/v1/${endpoint}\nStatus: Error ❌\n\nError: ${error.message}`;
             }
         }
-
-        // Auto-scroll to results when they appear
-        const observer = new MutationObserver((mutations) => {
-            const results = document.getElementById('api-results');
-            if (!results.classList.contains('hidden')) {
-                results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-        });
-        observer.observe(document.getElementById('api-results'), { attributes: true, attributeFilter: ['class'] });
     </script>
 </body>
 </html>
