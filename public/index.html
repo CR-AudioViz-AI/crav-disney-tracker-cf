@@ -3,131 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Disney Deal Tracker</title>
+    <title>Disney Deal Tracker - Live Deals</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏰</text></svg>">
     <style>
-        .deal-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .calendar-day.has-deals { background-color: #dcfce7; cursor: pointer; }
-        .modal { display: none; }
-        .modal.active { display: flex; }
+        .deal-card { transition: all 0.2s ease; cursor: pointer; }
+        .deal-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
+        .calendar-day { transition: all 0.15s ease; }
+        .calendar-day.has-deals { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); cursor: pointer; font-weight: 600; }
+        .calendar-day.has-deals:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(34,197,94,0.4); }
+        .calendar-day.today { border: 2px solid #3b82f6; }
+        .modal-overlay { opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { transform: scale(0.9) translateY(20px); transition: all 0.3s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .filter-btn.active { background: #3b82f6; color: white; }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: skeleton 1.5s infinite; }
+        @keyframes skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-white shadow-xl">
         <div class="max-w-7xl mx-auto px-4 py-6">
-            <h1 class="text-3xl font-bold">🏰 Disney Deal Tracker</h1>
-            <p class="text-blue-100 mt-1">Find the best Walt Disney World resort deals</p>
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold flex items-center gap-3">
+                        <span>🏰</span> Disney Deal Tracker
+                    </h1>
+                    <p class="text-blue-100 mt-1">Real-time Walt Disney World resort deals</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="refreshDeals()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                        <span id="refresh-icon">🔄</span> Refresh
+                    </button>
+                    <button onclick="exportDeals()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                        📊 Export
+                    </button>
+                </div>
+            </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Stats Bar -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white rounded-lg shadow p-4 text-center">
-                <div class="text-3xl font-bold text-blue-600" id="total-deals">-</div>
-                <div class="text-gray-600 text-sm">Active Deals</div>
+            <div class="bg-white rounded-xl shadow-lg p-5 text-center border-t-4 border-blue-500">
+                <div class="text-4xl font-bold text-blue-600" id="total-deals">
+                    <span class="skeleton inline-block w-8 h-8 rounded"></span>
+                </div>
+                <div class="text-gray-500 text-sm mt-1">Active Deals</div>
             </div>
-            <div class="bg-white rounded-lg shadow p-4 text-center">
-                <div class="text-3xl font-bold text-green-600" id="best-discount">-</div>
-                <div class="text-gray-600 text-sm">Best Discount</div>
+            <div class="bg-white rounded-xl shadow-lg p-5 text-center border-t-4 border-green-500">
+                <div class="text-4xl font-bold text-green-600" id="best-discount">
+                    <span class="skeleton inline-block w-12 h-8 rounded"></span>
+                </div>
+                <div class="text-gray-500 text-sm mt-1">Best Discount</div>
             </div>
-            <div class="bg-white rounded-lg shadow p-4 text-center">
-                <div class="text-3xl font-bold text-purple-600" id="resorts-count">4</div>
-                <div class="text-gray-600 text-sm">Resorts</div>
+            <div class="bg-white rounded-xl shadow-lg p-5 text-center border-t-4 border-purple-500">
+                <div class="text-4xl font-bold text-purple-600" id="resorts-count">4</div>
+                <div class="text-gray-500 text-sm mt-1">Resorts Tracked</div>
             </div>
-            <div class="bg-white rounded-lg shadow p-4 text-center">
-                <div class="text-3xl font-bold text-orange-600" id="last-updated">-</div>
-                <div class="text-gray-600 text-sm">Last Updated</div>
+            <div class="bg-white rounded-xl shadow-lg p-5 text-center border-t-4 border-orange-500">
+                <div class="text-4xl font-bold text-orange-600" id="last-updated">-</div>
+                <div class="text-gray-500 text-sm mt-1">Last Updated</div>
             </div>
         </div>
 
+        <!-- Main Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2">
+            <!-- Deals List -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Filter Bar -->
+                <div class="bg-white rounded-xl shadow-lg p-4">
+                    <div class="flex flex-wrap gap-2" id="filter-buttons">
+                        <button onclick="filterDeals('all')" class="filter-btn active px-4 py-2 rounded-full text-sm font-medium border transition" data-filter="all">
+                            All Deals
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Deals Container -->
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="bg-gray-50 px-6 py-4 border-b">
-                        <h2 class="text-xl font-bold text-gray-800">🔥 Current Deals</h2>
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            🔥 Current Deals
+                        </h2>
+                        <span class="text-sm text-gray-500" id="showing-count">Loading...</span>
                     </div>
                     <div id="deals-container" class="divide-y">
-                        <div class="p-8 text-center text-gray-500">
-                            <div class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
-                            <p>Loading deals...</p>
+                        <!-- Loading skeleton -->
+                        <div class="p-6">
+                            <div class="skeleton h-6 w-3/4 rounded mb-3"></div>
+                            <div class="skeleton h-4 w-full rounded mb-2"></div>
+                            <div class="skeleton h-4 w-1/2 rounded"></div>
+                        </div>
+                        <div class="p-6">
+                            <div class="skeleton h-6 w-2/3 rounded mb-3"></div>
+                            <div class="skeleton h-4 w-full rounded mb-2"></div>
+                            <div class="skeleton h-4 w-1/3 rounded"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-1">
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Calendar -->
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="bg-gray-50 px-6 py-4 border-b">
-                        <h2 class="text-xl font-bold text-gray-800">📅 Deal Calendar</h2>
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            📅 Deal Calendar
+                        </h2>
                         <p class="text-sm text-gray-600" id="calendar-month"></p>
                     </div>
                     <div class="p-4">
-                        <div class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-500 mb-2">
-                            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                        <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-500 mb-2">
+                            <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
                         </div>
                         <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
-                        <div class="mt-4 text-xs text-gray-500">
-                            <span class="inline-block w-3 h-3 bg-green-200 rounded mr-1"></span> Days with deals
+                        <div class="mt-4 flex items-center gap-4 text-xs text-gray-500">
+                            <span class="flex items-center gap-1">
+                                <span class="inline-block w-3 h-3 bg-green-200 rounded"></span> Deals available
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <span class="inline-block w-3 h-3 border-2 border-blue-500 rounded"></span> Today
+                            </span>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden mt-6">
-                    <div class="bg-gray-50 px-6 py-4 border-b">
-                        <h2 class="text-lg font-bold text-gray-800">🏨 Filter by Resort</h2>
+                <!-- Resort Quick Stats -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b">
+                        <h2 class="text-lg font-bold text-gray-800">🏨 Deals by Resort</h2>
                     </div>
-                    <div class="p-4 space-y-2" id="resort-filters"></div>
+                    <div class="p-4 space-y-2" id="resort-stats"></div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b">
+                        <h2 class="text-lg font-bold text-gray-800">⚡ Quick Actions</h2>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <a href="https://disneyworld.disney.go.com/special-offers/" target="_blank" 
+                           class="block w-full bg-blue-500 hover:bg-blue-600 text-white text-center py-3 rounded-lg font-medium transition">
+                            View Official Disney Deals →
+                        </a>
+                        <button onclick="showBestDeal()" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-medium transition">
+                            🏆 Show Best Deal
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <div id="deal-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div class="p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <span id="modal-badge" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold"></span>
-                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    <!-- Deal Detail Modal -->
+    <div id="deal-modal" class="modal-overlay fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick="closeModal(event)">
+        <div class="modal-content bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl" onclick="event.stopPropagation()">
+            <div class="relative">
+                <div class="absolute top-4 right-4">
+                    <button onclick="closeModal()" class="bg-gray-100 hover:bg-gray-200 rounded-full w-10 h-10 flex items-center justify-center text-gray-600 transition">
+                        ✕
+                    </button>
                 </div>
-                <h3 id="modal-title" class="text-2xl font-bold text-gray-900 mb-4"></h3>
-                <p id="modal-description" class="text-gray-600 mb-6"></p>
-                <div class="space-y-3 mb-6">
-                    <div class="flex items-center text-gray-700">
-                        <span class="w-6">🏨</span>
-                        <span id="modal-resort" class="ml-2"></span>
+                <div class="p-6 pt-8">
+                    <div class="mb-4">
+                        <span id="modal-badge" class="inline-block px-4 py-1 rounded-full text-sm font-bold"></span>
                     </div>
-                    <div class="flex items-center text-gray-700">
-                        <span class="w-6">📅</span>
-                        <span id="modal-dates" class="ml-2"></span>
+                    <h3 id="modal-title" class="text-2xl font-bold text-gray-900 mb-4 pr-8"></h3>
+                    <p id="modal-description" class="text-gray-600 mb-6 leading-relaxed"></p>
+                    
+                    <div class="bg-gray-50 rounded-xl p-4 space-y-3 mb-6">
+                        <div class="flex items-center text-gray-700">
+                            <span class="w-8 text-xl">🏨</span>
+                            <span id="modal-resort" class="font-medium"></span>
+                        </div>
+                        <div class="flex items-center text-gray-700">
+                            <span class="w-8 text-xl">📅</span>
+                            <span id="modal-dates"></span>
+                        </div>
+                        <div class="flex items-center text-gray-700">
+                            <span class="w-8 text-xl">🏷️</span>
+                            <span id="modal-type"></span>
+                        </div>
                     </div>
-                    <div class="flex items-center text-gray-700">
-                        <span class="w-6">🏷️</span>
-                        <span id="modal-type" class="ml-2"></span>
-                    </div>
+                    
+                    <a id="modal-link" href="#" target="_blank" 
+                       class="block w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white text-center py-4 rounded-xl font-bold text-lg transition shadow-lg">
+                        Book This Deal on Disney.com →
+                    </a>
                 </div>
-                <a id="modal-link" href="#" target="_blank" class="block w-full bg-blue-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
-                    View on Disney.com →
-                </a>
             </div>
         </div>
     </div>
 
-    <footer class="bg-gray-800 text-gray-400 mt-12 py-6">
+    <!-- Day Deals Modal -->
+    <div id="day-modal" class="modal-overlay fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick="closeDayModal(event)">
+        <div class="modal-content bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="day-modal-title" class="text-xl font-bold text-gray-900"></h3>
+                    <button onclick="closeDayModal()" class="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
+                </div>
+                <div id="day-modal-deals" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal-overlay fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick="closeExportModal(event)">
+        <div class="modal-content bg-white rounded-2xl max-w-md w-full shadow-2xl" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-gray-900 mb-4">📊 Export Deals</h3>
+                <div class="space-y-3">
+                    <button onclick="downloadCSV()" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-medium transition">
+                        📄 Download as CSV
+                    </button>
+                    <button onclick="copyToClipboard()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition">
+                        📋 Copy to Clipboard
+                    </button>
+                    <button onclick="printDeals()" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-lg font-medium transition">
+                        🖨️ Print Report
+                    </button>
+                </div>
+                <button onclick="closeExportModal()" class="w-full mt-4 py-2 text-gray-500 hover:text-gray-700">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50"></div>
+
+    <footer class="bg-gray-800 text-gray-400 mt-12 py-8">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p>Disney Deal Tracker • Powered by Javari AI</p>
+            <p class="text-lg">Disney Deal Tracker • Powered by <span class="text-purple-400 font-semibold">Javari AI</span></p>
+            <p class="text-sm mt-2">Data refreshes automatically • Not affiliated with The Walt Disney Company</p>
+            <p class="text-xs mt-4 text-gray-500">© 2025 CR AudioViz AI, LLC</p>
         </div>
     </footer>
 
     <script>
+        // Configuration
         const SUPABASE_URL = 'https://kteobfyferrukqeolofj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0ZW9iZnlmZXJydWtxZW9sb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxOTcyNjYsImV4cCI6MjA3NzU1NzI2Nn0.uy-jlF_z6qVb8qogsNyGDLHqT4HhmdRhLrW7zPv3qhY';
         
         let allDeals = [];
+        let filteredDeals = [];
         let currentFilter = 'all';
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadDeals();
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDeals();
             renderCalendar();
+            
+            // Auto-refresh every 5 minutes
+            setInterval(loadDeals, 300000);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeDayModal();
+                closeExportModal();
+            }
         });
 
         async function loadDeals() {
@@ -142,82 +286,138 @@
                     }
                 );
                 
-                allDeals = await response.json();
+                const data = await response.json();
                 
-                if (!Array.isArray(allDeals)) {
-                    console.error('Invalid response:', allDeals);
-                    allDeals = [];
+                if (Array.isArray(data)) {
+                    allDeals = data;
+                    filteredDeals = data;
+                    updateStats();
+                    renderDeals(filteredDeals);
+                    renderFilters();
+                    renderResortStats();
+                    renderCalendar();
+                    showToast(`Loaded ${allDeals.length} deals`);
+                } else {
+                    throw new Error('Invalid response');
                 }
-                
-                document.getElementById('total-deals').textContent = allDeals.length;
-                const discounts = allDeals.map(d => d.discount_percentage).filter(d => d);
-                document.getElementById('best-discount').textContent = discounts.length ? Math.max(...discounts) + '%' : 'N/A';
-                document.getElementById('last-updated').textContent = 'Now';
-                
-                renderDeals(allDeals);
-                renderResortFilters();
-                renderCalendar();
-                
             } catch (error) {
-                console.error('Error loading deals:', error);
+                console.error('Error:', error);
                 document.getElementById('deals-container').innerHTML = `
-                    <div class="p-8 text-center text-red-500">
-                        <p>Error loading deals: ${error.message}</p>
+                    <div class="p-8 text-center">
+                        <div class="text-red-500 text-5xl mb-4">⚠️</div>
+                        <p class="text-gray-600">Error loading deals. <button onclick="loadDeals()" class="text-blue-500 underline">Try again</button></p>
                     </div>
                 `;
             }
         }
 
+        function updateStats() {
+            document.getElementById('total-deals').textContent = allDeals.length;
+            
+            const discounts = allDeals.map(d => d.discount_percentage).filter(d => d);
+            document.getElementById('best-discount').textContent = discounts.length ? Math.max(...discounts) + '%' : 'N/A';
+            
+            const resorts = new Set(allDeals.map(d => d.resorts?.name).filter(n => n));
+            document.getElementById('resorts-count').textContent = resorts.size || 4;
+            
+            const now = new Date();
+            document.getElementById('last-updated').textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        }
+
         function renderDeals(deals) {
             const container = document.getElementById('deals-container');
+            document.getElementById('showing-count').textContent = `Showing ${deals.length} deal${deals.length !== 1 ? 's' : ''}`;
             
             if (deals.length === 0) {
-                container.innerHTML = '<div class="p-8 text-center text-gray-500"><p>No deals found.</p></div>';
+                container.innerHTML = `
+                    <div class="p-12 text-center">
+                        <div class="text-6xl mb-4">🔍</div>
+                        <p class="text-gray-500 text-lg">No deals found for this filter.</p>
+                        <button onclick="filterDeals('all')" class="mt-4 text-blue-500 hover:underline">Show all deals</button>
+                    </div>
+                `;
                 return;
             }
             
             container.innerHTML = deals.map((deal, index) => `
-                <div class="deal-card p-6 hover:bg-gray-50 cursor-pointer transition" onclick="showDealModal(${index})">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-gray-900 text-lg flex-1 pr-4">${deal.title}</h3>
-                        ${deal.discount_percentage ? `
-                            <span class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap">
-                                ${deal.discount_percentage}% OFF
-                            </span>
-                        ` : `
-                            <span class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-bold whitespace-nowrap">
-                                Special
-                            </span>
-                        `}
-                    </div>
-                    <p class="text-gray-600 text-sm mb-3 line-clamp-2">${deal.description || ''}</p>
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-500">🏨 ${deal.resorts?.name || 'Disney Resort'}</span>
-                        <span class="text-gray-400">Valid until ${new Date(deal.valid_to).toLocaleDateString()}</span>
+                <div class="deal-card p-6 hover:bg-blue-50" onclick="showDealModal(${index})">
+                    <div class="flex justify-between items-start gap-4">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-gray-900 text-lg mb-2">${escapeHtml(deal.title)}</h3>
+                            <p class="text-gray-600 text-sm mb-3 line-clamp-2">${escapeHtml(deal.description || '')}</p>
+                            <div class="flex flex-wrap items-center gap-4 text-sm">
+                                <span class="text-gray-500 flex items-center gap-1">
+                                    🏨 ${escapeHtml(deal.resorts?.name || 'Disney Resort')}
+                                </span>
+                                <span class="text-gray-400 flex items-center gap-1">
+                                    📅 Until ${formatDate(deal.valid_to)}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            ${deal.discount_percentage ? `
+                                <div class="bg-gradient-to-br from-green-500 to-green-600 text-white px-4 py-2 rounded-xl text-center shadow-lg">
+                                    <div class="text-2xl font-bold">${deal.discount_percentage}%</div>
+                                    <div class="text-xs opacity-90">OFF</div>
+                                </div>
+                            ` : `
+                                <div class="bg-gradient-to-br from-blue-500 to-purple-500 text-white px-4 py-2 rounded-xl text-center shadow-lg">
+                                    <div class="text-lg font-bold">Special</div>
+                                    <div class="text-xs opacity-90">Offer</div>
+                                </div>
+                            `}
+                        </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        function renderResortFilters() {
+        function renderFilters() {
             const resorts = [...new Set(allDeals.map(d => d.resorts?.name).filter(n => n))];
-            const container = document.getElementById('resort-filters');
+            const container = document.getElementById('filter-buttons');
             
             container.innerHTML = `
-                <button onclick="filterByResort('all')" class="w-full text-left px-3 py-2 rounded hover:bg-gray-100 ${currentFilter === 'all' ? 'bg-blue-100 text-blue-700' : ''}">
-                    All Resorts (${allDeals.length})
+                <button onclick="filterDeals('all')" class="filter-btn ${currentFilter === 'all' ? 'active' : ''} px-4 py-2 rounded-full text-sm font-medium border border-gray-200 hover:border-blue-500 transition" data-filter="all">
+                    All Deals (${allDeals.length})
                 </button>
-                ${resorts.map(resort => {
-                    const count = allDeals.filter(d => d.resorts?.name === resort).length;
-                    return `<button onclick="filterByResort('${resort}')" class="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${currentFilter === resort ? 'bg-blue-100 text-blue-700' : ''}">${resort.replace("Disney's ", '')} (${count})</button>`;
-                }).join('')}
+                ${resorts.map(resort => `
+                    <button onclick="filterDeals('${escapeHtml(resort)}')" class="filter-btn ${currentFilter === resort ? 'active' : ''} px-4 py-2 rounded-full text-sm font-medium border border-gray-200 hover:border-blue-500 transition" data-filter="${escapeHtml(resort)}">
+                        ${escapeHtml(resort.replace("Disney's ", ''))}
+                    </button>
+                `).join('')}
             `;
         }
 
-        function filterByResort(resort) {
-            currentFilter = resort;
-            renderDeals(resort === 'all' ? allDeals : allDeals.filter(d => d.resorts?.name === resort));
-            renderResortFilters();
+        function renderResortStats() {
+            const resortCounts = {};
+            allDeals.forEach(deal => {
+                const name = deal.resorts?.name || 'Unknown';
+                resortCounts[name] = (resortCounts[name] || 0) + 1;
+            });
+
+            const container = document.getElementById('resort-stats');
+            container.innerHTML = Object.entries(resortCounts)
+                .sort((a, b) => b[1] - a[1])
+                .map(([resort, count]) => `
+                    <div class="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50 cursor-pointer" onclick="filterDeals('${escapeHtml(resort)}')">
+                        <span class="text-sm text-gray-700">${escapeHtml(resort.replace("Disney's ", ''))}</span>
+                        <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">${count}</span>
+                    </div>
+                `).join('');
+        }
+
+        function filterDeals(filter) {
+            currentFilter = filter;
+            
+            if (filter === 'all') {
+                filteredDeals = allDeals;
+            } else {
+                filteredDeals = allDeals.filter(d => d.resorts?.name === filter);
+            }
+            
+            renderDeals(filteredDeals);
+            renderFilters();
+            showToast(`Showing ${filteredDeals.length} deals`);
         }
 
         function renderCalendar() {
@@ -230,55 +430,211 @@
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             
-            const daysWithDeals = new Set();
+            // Find days with deals
+            const dealsByDay = {};
             allDeals.forEach(deal => {
                 const start = new Date(deal.valid_from);
                 const end = new Date(deal.valid_to);
                 for (let d = 1; d <= daysInMonth; d++) {
                     const date = new Date(year, month, d);
-                    if (date >= start && date <= end) daysWithDeals.add(d);
+                    if (date >= start && date <= end) {
+                        if (!dealsByDay[d]) dealsByDay[d] = [];
+                        dealsByDay[d].push(deal);
+                    }
                 }
             });
             
             let html = '';
-            for (let i = 0; i < firstDay; i++) html += '<div class="p-2"></div>';
-            for (let day = 1; day <= daysInMonth; day++) {
-                const hasDeals = daysWithDeals.has(day);
-                const isToday = day === now.getDate();
-                html += `<div class="calendar-day p-2 text-center rounded text-sm ${hasDeals ? 'has-deals font-medium' : 'text-gray-400'} ${isToday ? 'ring-2 ring-blue-500' : ''}">${day}</div>`;
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="p-2"></div>';
             }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const hasDeals = dealsByDay[day];
+                const isToday = day === now.getDate();
+                const dealCount = hasDeals ? hasDeals.length : 0;
+                
+                html += `
+                    <div class="calendar-day p-2 text-center rounded-lg text-sm relative
+                        ${hasDeals ? 'has-deals' : 'text-gray-400'} 
+                        ${isToday ? 'today' : ''}"
+                        ${hasDeals ? `onclick="showDayDeals(${day}, ${year}, ${month})"` : ''}>
+                        ${day}
+                        ${dealCount > 0 ? `<span class="absolute -top-1 -right-1 bg-green-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">${dealCount}</span>` : ''}
+                    </div>
+                `;
+            }
+            
             document.getElementById('calendar-grid').innerHTML = html;
         }
 
         function showDealModal(index) {
-            const deal = allDeals[index];
+            const deal = filteredDeals[index];
+            if (!deal) return;
+
             document.getElementById('modal-title').textContent = deal.title;
-            document.getElementById('modal-description').textContent = deal.description || '';
+            document.getElementById('modal-description').textContent = deal.description || 'No additional details available.';
             document.getElementById('modal-resort').textContent = deal.resorts?.name || 'Disney Resort';
-            document.getElementById('modal-dates').textContent = `${new Date(deal.valid_from).toLocaleDateString()} - ${new Date(deal.valid_to).toLocaleDateString()}`;
-            document.getElementById('modal-type').textContent = (deal.deal_type || 'special').replace('_', ' ');
+            document.getElementById('modal-dates').textContent = `${formatDate(deal.valid_from)} - ${formatDate(deal.valid_to)}`;
+            document.getElementById('modal-type').textContent = formatDealType(deal.deal_type);
             document.getElementById('modal-link').href = deal.source_url || 'https://disneyworld.disney.go.com/special-offers/';
             
             const badge = document.getElementById('modal-badge');
             if (deal.discount_percentage) {
-                badge.textContent = deal.discount_percentage + '% OFF';
-                badge.className = 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold';
+                badge.textContent = `${deal.discount_percentage}% OFF`;
+                badge.className = 'inline-block px-4 py-1 rounded-full text-sm font-bold bg-green-100 text-green-800';
             } else {
                 badge.textContent = 'Special Offer';
-                badge.className = 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold';
+                badge.className = 'inline-block px-4 py-1 rounded-full text-sm font-bold bg-blue-100 text-blue-800';
             }
             
             document.getElementById('deal-modal').classList.add('active');
         }
 
-        function closeModal() {
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
             document.getElementById('deal-modal').classList.remove('active');
         }
 
-        document.getElementById('deal-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'deal-modal') closeModal();
-        });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+        function showDayDeals(day, year, month) {
+            const date = new Date(year, month, day);
+            const dayDeals = allDeals.filter(deal => {
+                const start = new Date(deal.valid_from);
+                const end = new Date(deal.valid_to);
+                return date >= start && date <= end;
+            });
+
+            document.getElementById('day-modal-title').textContent = `Deals for ${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`;
+            
+            document.getElementById('day-modal-deals').innerHTML = dayDeals.map((deal, i) => `
+                <div class="p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100" onclick="closeDayModal(); setTimeout(() => { filteredDeals = allDeals; showDealModal(${allDeals.indexOf(deal)}); }, 100);">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-semibold text-gray-900">${escapeHtml(deal.title)}</h4>
+                            <p class="text-sm text-gray-500">${escapeHtml(deal.resorts?.name || '')}</p>
+                        </div>
+                        ${deal.discount_percentage ? `<span class="bg-green-500 text-white px-2 py-1 rounded text-sm font-bold">${deal.discount_percentage}%</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('day-modal').classList.add('active');
+        }
+
+        function closeDayModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('day-modal').classList.remove('active');
+        }
+
+        function showBestDeal() {
+            const bestDeal = allDeals.reduce((best, deal) => {
+                if (!best || (deal.discount_percentage || 0) > (best.discount_percentage || 0)) {
+                    return deal;
+                }
+                return best;
+            }, null);
+
+            if (bestDeal) {
+                filteredDeals = allDeals;
+                showDealModal(allDeals.indexOf(bestDeal));
+            } else {
+                showToast('No deals available');
+            }
+        }
+
+        async function refreshDeals() {
+            const icon = document.getElementById('refresh-icon');
+            icon.style.animation = 'spin 1s linear infinite';
+            
+            await loadDeals();
+            
+            setTimeout(() => {
+                icon.style.animation = '';
+            }, 1000);
+        }
+
+        function exportDeals() {
+            document.getElementById('export-modal').classList.add('active');
+        }
+
+        function closeExportModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('export-modal').classList.remove('active');
+        }
+
+        function downloadCSV() {
+            const headers = ['Title', 'Resort', 'Discount', 'Type', 'Valid From', 'Valid To', 'URL'];
+            const rows = allDeals.map(d => [
+                `"${d.title}"`,
+                `"${d.resorts?.name || ''}"`,
+                d.discount_percentage || '',
+                d.deal_type || '',
+                d.valid_from,
+                d.valid_to,
+                d.source_url || ''
+            ]);
+            
+            const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `disney-deals-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            
+            closeExportModal();
+            showToast('CSV downloaded!');
+        }
+
+        function copyToClipboard() {
+            const text = allDeals.map(d => 
+                `${d.title}\n${d.resorts?.name || 'Disney Resort'}\n${d.discount_percentage ? d.discount_percentage + '% off' : 'Special Offer'}\nValid: ${formatDate(d.valid_from)} - ${formatDate(d.valid_to)}\n`
+            ).join('\n---\n');
+            
+            navigator.clipboard.writeText(text).then(() => {
+                closeExportModal();
+                showToast('Copied to clipboard!');
+            });
+        }
+
+        function printDeals() {
+            window.print();
+            closeExportModal();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function formatDealType(type) {
+            if (!type) return 'Special Offer';
+            return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+
+        // Add spin animation
+        const style = document.createElement('style');
+        style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
