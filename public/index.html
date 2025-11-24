@@ -24,11 +24,11 @@
         .availability-limited { background: #fef9c3; color: #854d0e; }
         .availability-none { background: #fee2e2; color: #991b1b; }
         .resort-item:hover { background: #f3f4f6; }
-        .price-tag { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .animate-spin { animation: spin 1s linear infinite; }
-        .pulse { animation: pulse 2s infinite; }
+        .nav-btn { transition: all 0.15s; }
+        .nav-btn:hover { background: #e5e7eb; }
+        .nav-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -106,23 +106,62 @@
                     </div>
                 </div>
                 <div class="space-y-6">
+                    <!-- MINI CALENDAR WITH NAVIGATION -->
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b">
-                            <h2 class="text-lg font-bold text-gray-800">📅 <span id="calendar-month"></span></h2>
+                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-b">
+                            <div class="flex items-center justify-between">
+                                <button onclick="changeMiniMonth(-1)" class="nav-btn w-8 h-8 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-200">
+                                    ←
+                                </button>
+                                <h2 class="text-lg font-bold text-gray-800">📅 <span id="calendar-month"></span></h2>
+                                <button onclick="changeMiniMonth(1)" class="nav-btn w-8 h-8 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-200">
+                                    →
+                                </button>
+                            </div>
                         </div>
                         <div class="p-4">
                             <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-500 mb-2">
                                 <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
                             </div>
                             <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
+                            <div class="mt-3 flex items-center justify-between text-xs text-gray-500">
+                                <span class="flex items-center gap-1">
+                                    <span class="w-3 h-3 bg-green-200 rounded"></span> Deals available
+                                </span>
+                                <button onclick="goToToday()" class="text-blue-500 hover:underline">Today</button>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Date Range Picker -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b">
+                            <h2 class="text-lg font-bold text-gray-800">📆 Search by Date Range</h2>
+                        </div>
+                        <div class="p-4 space-y-3">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Start Date</label>
+                                <input type="date" id="range-start" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">End Date</label>
+                                <input type="date" id="range-end" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <button onclick="searchByDateRange()" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-medium transition">
+                                🔍 Find Deals
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Deals by Resort -->
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b">
                             <h2 class="text-lg font-bold text-gray-800">🏨 Deals by Resort</h2>
                         </div>
                         <div class="divide-y" id="resort-stats"></div>
                     </div>
+
+                    <!-- Quick Actions -->
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b">
                             <h2 class="text-lg font-bold text-gray-800">⚡ Quick Actions</h2>
@@ -186,19 +225,9 @@
                         <div class="text-center py-12 text-gray-500">
                             <div class="text-6xl mb-4">🔍</div>
                             <p class="text-lg">Select dates and click Search to check availability</p>
-                            <p class="text-sm mt-2">We check Disney resorts, Good Neighbor hotels, and local options</p>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="mt-6 bg-blue-50 rounded-xl p-6">
-                <h3 class="font-bold text-blue-800 mb-2">💡 Pro Tips for Finding Availability</h3>
-                <ul class="text-blue-700 space-y-1 text-sm">
-                    <li>• Check weekday dates - weekends fill up fast</li>
-                    <li>• Value resorts (Pop Century, All-Star) often have more availability</li>
-                    <li>• Good Neighbor hotels are usually available and 50-70% cheaper</li>
-                    <li>• Book 60+ days out for best selection at Disney resorts</li>
-                </ul>
             </div>
         </div>
 
@@ -209,6 +238,7 @@
                     <h2 class="text-xl font-bold text-gray-800">📅 Full Deal Calendar</h2>
                     <div class="flex gap-2">
                         <button onclick="changeMonth(-1)" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">← Prev</button>
+                        <button onclick="goToTodayFull()" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium">Today</button>
                         <button onclick="changeMonth(1)" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Next →</button>
                     </div>
                 </div>
@@ -230,59 +260,21 @@
                         <h2 class="text-xl font-bold">📡 Deal Sources (All FREE)</h2>
                     </div>
                     <div class="divide-y">
-                        <div class="p-4 flex justify-between items-center">
-                            <div><div class="font-medium">Disney Parks Blog</div><div class="text-sm text-gray-500">Official Disney announcements</div></div>
-                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">● Active</span>
-                        </div>
-                        <div class="p-4 flex justify-between items-center">
-                            <div><div class="font-medium">MouseSavers.com</div><div class="text-sm text-gray-500">Discount codes & promotions</div></div>
-                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">● Active</span>
-                        </div>
-                        <div class="p-4 flex justify-between items-center">
-                            <div><div class="font-medium">AllEars.net</div><div class="text-sm text-gray-500">Community-sourced deals</div></div>
-                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">● Active</span>
-                        </div>
-                        <div class="p-4 flex justify-between items-center">
-                            <div><div class="font-medium">WDW News Today</div><div class="text-sm text-gray-500">Breaking Disney news</div></div>
-                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">● Active</span>
-                        </div>
-                        <div class="p-4 flex justify-between items-center">
-                            <div><div class="font-medium">r/WaltDisneyWorld</div><div class="text-sm text-gray-500">Reddit community tips</div></div>
-                            <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">● Planned</span>
-                        </div>
+                        <div class="p-4 flex justify-between items-center"><div><div class="font-medium">Disney Parks Blog</div><div class="text-sm text-gray-500">Official announcements</div></div><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">● Active</span></div>
+                        <div class="p-4 flex justify-between items-center"><div><div class="font-medium">MouseSavers.com</div><div class="text-sm text-gray-500">Discount codes</div></div><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">● Active</span></div>
+                        <div class="p-4 flex justify-between items-center"><div><div class="font-medium">AllEars.net</div><div class="text-sm text-gray-500">Community deals</div></div><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">● Active</span></div>
+                        <div class="p-4 flex justify-between items-center"><div><div class="font-medium">WDW News Today</div><div class="text-sm text-gray-500">Breaking news</div></div><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">● Active</span></div>
                     </div>
                 </div>
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div class="bg-gradient-to-r from-blue-500 to-purple-500 px-6 py-4 text-white">
-                        <h2 class="text-xl font-bold">🏨 Hotel Data Sources (All FREE)</h2>
+                        <h2 class="text-xl font-bold">🏨 Hotel Data (All FREE)</h2>
                     </div>
                     <div class="divide-y">
-                        <div class="p-4 flex justify-between items-center">
-                            <div><div class="font-medium">Disney Direct Links</div><div class="text-sm text-gray-500">Official booking pages</div></div>
-                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">● Active</span>
-                        </div>
-                        <div class="p-4 flex justify-between items-center">
-                            <div><div class="font-medium">Good Neighbor Hotels</div><div class="text-sm text-gray-500">Partner hotel direct links</div></div>
-                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">● Active</span>
-                        </div>
-                        <div class="p-4 flex justify-between items-center">
-                            <div><div class="font-medium">Google Hotels API</div><div class="text-sm text-gray-500">Price comparison</div></div>
-                            <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">● Planned</span>
-                        </div>
-                        <div class="p-4 flex justify-between items-center">
-                            <div><div class="font-medium">Booking.com Affiliate</div><div class="text-sm text-gray-500">Partner rates</div></div>
-                            <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">● Planned</span>
-                        </div>
+                        <div class="p-4 flex justify-between items-center"><div><div class="font-medium">Disney Direct Links</div><div class="text-sm text-gray-500">Official booking</div></div><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">● Active</span></div>
+                        <div class="p-4 flex justify-between items-center"><div><div class="font-medium">Good Neighbor Hotels</div><div class="text-sm text-gray-500">Partner links</div></div><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">● Active</span></div>
+                        <div class="p-4 flex justify-between items-center"><div><div class="font-medium">Google Hotels Compare</div><div class="text-sm text-gray-500">Price comparison</div></div><span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">● Active</span></div>
                     </div>
-                </div>
-            </div>
-            <div class="mt-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6">
-                <h3 class="font-bold text-purple-800 mb-3">🤖 Automated Scraping Schedule</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div class="bg-white rounded-lg p-3"><div class="font-medium text-purple-700">Deal Sources</div><div class="text-gray-500">Every 2 hours</div></div>
-                    <div class="bg-white rounded-lg p-3"><div class="font-medium text-purple-700">Price Updates</div><div class="text-gray-500">Every 6 hours</div></div>
-                    <div class="bg-white rounded-lg p-3"><div class="font-medium text-purple-700">Availability</div><div class="text-gray-500">Real-time</div></div>
-                    <div class="bg-white rounded-lg p-3"><div class="font-medium text-purple-700">New Sources</div><div class="text-gray-500">Daily check</div></div>
                 </div>
             </div>
         </div>
@@ -349,8 +341,7 @@
     <footer class="bg-gray-800 text-gray-400 mt-12 py-8">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <p class="text-lg">Disney Deal Tracker + Live Availability • Powered by <span class="text-purple-400 font-semibold">Javari AI</span></p>
-            <p class="text-sm mt-2">All data sources are FREE • Not affiliated with The Walt Disney Company</p>
-            <p class="text-xs mt-4 text-gray-500">© 2025 CR AudioViz AI, LLC</p>
+            <p class="text-sm mt-2">© 2025 CR AudioViz AI, LLC</p>
         </div>
     </footer>
 
@@ -364,9 +355,10 @@
         let filteredHotels = [];
         let currentFilter = 'all';
         let currentHotelFilter = 'all';
-        let currentMonth = new Date();
+        let miniCalendarMonth = new Date(); // Separate tracker for mini calendar
+        let currentMonth = new Date(); // For full calendar
 
-        // Hotel Database (FREE - no API needed)
+        // Hotel Database
         const HOTELS_DB = {
             disney: [
                 { id: 'pop', name: "Disney's Pop Century Resort", type: 'Value', cat: 'disney', base: 199, rating: 4.2, reviews: 12453, dist: 'On Property', amenities: ['Pool','Food Court','Skyliner'], url: 'https://disneyworld.disney.go.com/resorts/pop-century-resort/' },
@@ -398,6 +390,8 @@
             const nextWeek = new Date(today.getTime() + 7*24*60*60*1000);
             document.getElementById('checkin-date').value = today.toISOString().split('T')[0];
             document.getElementById('checkout-date').value = nextWeek.toISOString().split('T')[0];
+            document.getElementById('range-start').value = today.toISOString().split('T')[0];
+            document.getElementById('range-end').value = new Date(today.getTime() + 90*24*60*60*1000).toISOString().split('T')[0];
             loadDeals();
             setInterval(loadDeals, 300000);
         });
@@ -427,9 +421,9 @@
 
         function renderDeals(deals) {
             document.getElementById('showing-count').textContent = `Showing ${deals.length} deals`;
-            if (!deals.length) { document.getElementById('deals-container').innerHTML = '<div class="p-12 text-center text-gray-500"><div class="text-6xl mb-4">🔍</div>No deals found.</div>'; return; }
+            if (!deals.length) { document.getElementById('deals-container').innerHTML = '<div class="p-12 text-center text-gray-500"><div class="text-6xl mb-4">🔍</div>No deals found for selected criteria.</div>'; return; }
             document.getElementById('deals-container').innerHTML = deals.map((d, i) => `
-                <div class="deal-card p-6 clickable" onclick="showDealModal(${i})">
+                <div class="deal-card p-6 clickable" onclick="showDealModal(${allDeals.indexOf(d)})">
                     <div class="flex justify-between items-start gap-4">
                         <div class="flex-1">
                             <h3 class="font-bold text-gray-900 text-lg mb-2">${esc(d.title)}</h3>
@@ -454,28 +448,77 @@
 
         function filterDeals(f) { currentFilter=f; filteredDeals = f==='all' ? allDeals : allDeals.filter(d=>d.resorts?.name===f); renderDeals(filteredDeals); renderFilters(); showToast(`Showing ${filteredDeals.length} deals`); }
 
+        // MINI CALENDAR (with navigation)
         function renderCalendar() {
-            const now = new Date(); const y = now.getFullYear(), m = now.getMonth();
-            document.getElementById('calendar-month').textContent = now.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+            const y = miniCalendarMonth.getFullYear(), m = miniCalendarMonth.getMonth();
+            document.getElementById('calendar-month').textContent = miniCalendarMonth.toLocaleDateString('en-US',{month:'long',year:'numeric'});
             const firstDay = new Date(y,m,1).getDay(), days = new Date(y,m+1,0).getDate();
+            const today = new Date();
+            
             const dealsByDay = {}; allDeals.forEach(deal => { const s=new Date(deal.valid_from), e=new Date(deal.valid_to); for(let d=1;d<=days;d++){const dt=new Date(y,m,d);if(dt>=s&&dt<=e){if(!dealsByDay[d])dealsByDay[d]=[];dealsByDay[d].push(deal);}} });
+            
             let html = ''; for(let i=0;i<firstDay;i++)html+='<div class="p-2"></div>';
-            for(let d=1;d<=days;d++){const has=dealsByDay[d], today=d===now.getDate(); html+=`<div class="calendar-day p-2 text-center rounded-lg text-sm ${has?'has-deals':'text-gray-400'} ${today?'ring-2 ring-blue-500':''}" ${has?`onclick="showDayDeals(${d})"`:''}>${d}</div>`;}
+            for(let d=1;d<=days;d++){
+                const has=dealsByDay[d];
+                const isToday = d===today.getDate() && m===today.getMonth() && y===today.getFullYear();
+                html+=`<div class="calendar-day p-2 text-center rounded-lg text-sm ${has?'has-deals':'text-gray-400'} ${isToday?'ring-2 ring-blue-500':''}" ${has?`onclick="showDayDeals(${d},${y},${m})"`:''}>${d}</div>`;
+            }
             document.getElementById('calendar-grid').innerHTML = html;
         }
 
+        function changeMiniMonth(delta) {
+            miniCalendarMonth = new Date(miniCalendarMonth.getFullYear(), miniCalendarMonth.getMonth() + delta, 1);
+            renderCalendar();
+        }
+
+        function goToToday() {
+            miniCalendarMonth = new Date();
+            renderCalendar();
+        }
+
+        // DATE RANGE SEARCH
+        function searchByDateRange() {
+            const start = new Date(document.getElementById('range-start').value);
+            const end = new Date(document.getElementById('range-end').value);
+            
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                showToast('Please select valid dates');
+                return;
+            }
+            
+            filteredDeals = allDeals.filter(deal => {
+                const dealStart = new Date(deal.valid_from);
+                const dealEnd = new Date(deal.valid_to);
+                // Deal overlaps with search range
+                return dealStart <= end && dealEnd >= start;
+            });
+            
+            currentFilter = 'all';
+            renderDeals(filteredDeals);
+            renderFilters();
+            showToast(`Found ${filteredDeals.length} deals for selected dates`);
+        }
+
+        // FULL CALENDAR
         function renderFullCalendar() {
             const y=currentMonth.getFullYear(), m=currentMonth.getMonth();
             document.getElementById('full-calendar-month').textContent = currentMonth.toLocaleDateString('en-US',{month:'long',year:'numeric'});
             const firstDay = new Date(y,m,1).getDay(), days = new Date(y,m+1,0).getDate();
+            const today = new Date();
+            
             const dealsByDay = {}; allDeals.forEach(deal => { const s=new Date(deal.valid_from), e=new Date(deal.valid_to); for(let d=1;d<=days;d++){const dt=new Date(y,m,d);if(dt>=s&&dt<=e){if(!dealsByDay[d])dealsByDay[d]=[];dealsByDay[d].push(deal);}} });
+            
             let html = ''; for(let i=0;i<firstDay;i++)html+='<div class="p-4 bg-gray-50 rounded"></div>';
-            for(let d=1;d<=days;d++){const deals=dealsByDay[d]||[], best=deals.reduce((m,x)=>Math.max(m,x.discount_percentage||0),0);
-            html+=`<div class="p-3 border rounded-lg min-h-[80px] ${deals.length?'bg-green-50 cursor-pointer hover:bg-green-100':'bg-white'}" ${deals.length?`onclick="showDayDeals(${d},${y},${m})"`:''}><div class="font-bold ${deals.length?'text-green-700':'text-gray-600'}">${d}</div>${deals.length?`<div class="text-xs text-green-600 mt-1">${deals.length} deals</div>${best?`<div class="text-xs font-bold text-green-700">Up to ${best}% off</div>`:''}`:''}}</div>`;}
+            for(let d=1;d<=days;d++){
+                const deals=dealsByDay[d]||[], best=deals.reduce((m,x)=>Math.max(m,x.discount_percentage||0),0);
+                const isToday = d===today.getDate() && m===today.getMonth() && y===today.getFullYear();
+                html+=`<div class="p-3 border rounded-lg min-h-[80px] ${deals.length?'bg-green-50 cursor-pointer hover:bg-green-100':'bg-white'} ${isToday?'ring-2 ring-blue-500':''}" ${deals.length?`onclick="showDayDeals(${d},${y},${m})"`:''}><div class="font-bold ${deals.length?'text-green-700':'text-gray-600'}">${d}</div>${deals.length?`<div class="text-xs text-green-600 mt-1">${deals.length} deals</div>${best?`<div class="text-xs font-bold text-green-700">Up to ${best}% off</div>`:''}`:''}}</div>`;
+            }
             document.getElementById('full-calendar-grid').innerHTML = html;
         }
 
         function changeMonth(d) { currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+d, 1); renderFullCalendar(); }
+        function goToTodayFull() { currentMonth = new Date(); renderFullCalendar(); }
 
         // AVAILABILITY
         function searchAvailability() {
@@ -486,7 +529,7 @@
             if (!checkin || !checkout) { showToast('Please select dates'); return; }
             
             const container = document.getElementById('availability-results');
-            container.innerHTML = '<div class="text-center py-8"><div class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div><p class="mt-4 text-gray-500">Searching hotels...</p></div>';
+            container.innerHTML = '<div class="text-center py-8"><div class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div><p class="mt-4 text-gray-500">Searching...</p></div>';
             
             setTimeout(() => {
                 const nights = Math.ceil((new Date(checkout)-new Date(checkin))/(1000*60*60*24));
@@ -496,12 +539,10 @@
                     const avail = Math.random();
                     return { ...h, price, total: price*nights, nights, availability: avail<0.1?'Sold Out':avail<0.3?'Limited':'Available', rooms: avail<0.3?Math.floor(Math.random()*5)+1:null };
                 });
-                
                 if (budget !== 'all') {
                     const ranges = { budget: [0,100], moderate: [100,250], deluxe: [250,9999] };
                     allHotels = allHotels.filter(h => h.price >= ranges[budget][0] && h.price < ranges[budget][1]);
                 }
-                
                 filteredHotels = currentHotelFilter === 'all' ? allHotels : allHotels.filter(h => h.cat === currentHotelFilter);
                 renderHotels();
             }, 800);
@@ -516,28 +557,19 @@
         }
 
         function renderHotels() {
-            if (!filteredHotels.length) { document.getElementById('availability-results').innerHTML = '<div class="text-center py-8 text-gray-500">No hotels found. Try different dates or filters.</div>'; return; }
+            if (!filteredHotels.length) { document.getElementById('availability-results').innerHTML = '<div class="text-center py-8 text-gray-500">No hotels found. Try different filters.</div>'; return; }
             document.getElementById('availability-results').innerHTML = filteredHotels.sort((a,b)=>a.availability==='Sold Out'?1:b.availability==='Sold Out'?-1:a.price-b.price).map(h => `
                 <div class="border rounded-xl p-4 mb-4 hover:shadow-lg transition ${h.availability==='Sold Out'?'opacity-60':''}">
                     <div class="flex flex-col md:flex-row justify-between gap-4">
                         <div class="flex-1">
-                            <div class="flex items-start gap-2">
-                                <h4 class="font-bold text-lg text-gray-900">${h.name}</h4>
-                                ${h.cat==='disney'?'<span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">Disney</span>':h.cat==='partner'?'<span class="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded">Partner</span>':''}
-                            </div>
+                            <div class="flex items-start gap-2"><h4 class="font-bold text-lg text-gray-900">${h.name}</h4>${h.cat==='disney'?'<span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">Disney</span>':h.cat==='partner'?'<span class="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded">Partner</span>':''}</div>
                             <p class="text-gray-500 text-sm">${h.type} • ${h.dist}</p>
                             <div class="mt-2 flex items-center gap-2"><span class="text-yellow-500">★</span><span class="text-sm">${h.rating} (${h.reviews.toLocaleString()} reviews)</span></div>
                             <div class="mt-2 flex flex-wrap gap-1">${h.amenities.map(a=>`<span class="text-xs bg-gray-100 px-2 py-1 rounded">${a}</span>`).join('')}</div>
                         </div>
                         <div class="text-right flex flex-col justify-between">
-                            <div>
-                                <div class="text-3xl font-bold text-gray-900">$${h.price}</div>
-                                <div class="text-sm text-gray-500">per night</div>
-                                <div class="text-sm text-gray-400">${h.nights} nights = $${h.total}</div>
-                            </div>
-                            <div class="mt-2">
-                                <span class="inline-block px-3 py-1 rounded-full text-sm font-medium ${h.availability==='Available'?'availability-good':h.availability==='Limited'?'availability-limited':'availability-none'}">${h.availability}${h.rooms?' ('+h.rooms+' left)':''}</span>
-                            </div>
+                            <div><div class="text-3xl font-bold text-gray-900">$${h.price}</div><div class="text-sm text-gray-500">per night</div><div class="text-sm text-gray-400">${h.nights} nights = $${h.total}</div></div>
+                            <div class="mt-2"><span class="inline-block px-3 py-1 rounded-full text-sm font-medium ${h.availability==='Available'?'availability-good':h.availability==='Limited'?'availability-limited':'availability-none'}">${h.availability}${h.rooms?' ('+h.rooms+' left)':''}</span></div>
                         </div>
                     </div>
                     <div class="mt-4 flex gap-2">
@@ -554,13 +586,13 @@
         function showTab(t) { document.querySelectorAll('.tab-content').forEach(x=>x.classList.add('hidden')); document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active')); document.getElementById(t+'-tab').classList.remove('hidden'); document.querySelector(`[data-tab="${t}"]`).classList.add('active'); if(t==='calendar')renderFullCalendar(); }
 
         // MODALS
-        function showDealModal(i) { const d=filteredDeals[i]; if(!d)return; document.getElementById('modal-title').textContent=d.title; document.getElementById('modal-description').textContent=d.description||''; document.getElementById('modal-resort').textContent=d.resorts?.name||'Disney Resort'; document.getElementById('modal-dates').textContent=`${fmtDate(d.valid_from)} - ${fmtDate(d.valid_to)}`; document.getElementById('modal-type').textContent=fmtType(d.deal_type); document.getElementById('modal-link').href=d.source_url||'https://disneyworld.disney.go.com/special-offers/'; const b=document.getElementById('modal-badge'); b.textContent=d.discount_percentage?`${d.discount_percentage}% OFF`:'Special Offer'; b.className=`inline-block px-4 py-1 rounded-full text-sm font-bold ${d.discount_percentage?'bg-green-100 text-green-800':'bg-blue-100 text-blue-800'}`; document.getElementById('deal-modal').classList.add('active'); }
+        function showDealModal(i) { const d=allDeals[i]; if(!d)return; document.getElementById('modal-title').textContent=d.title; document.getElementById('modal-description').textContent=d.description||''; document.getElementById('modal-resort').textContent=d.resorts?.name||'Disney Resort'; document.getElementById('modal-dates').textContent=`${fmtDate(d.valid_from)} - ${fmtDate(d.valid_to)}`; document.getElementById('modal-type').textContent=fmtType(d.deal_type); document.getElementById('modal-link').href=d.source_url||'https://disneyworld.disney.go.com/special-offers/'; const b=document.getElementById('modal-badge'); b.textContent=d.discount_percentage?`${d.discount_percentage}% OFF`:'Special Offer'; b.className=`inline-block px-4 py-1 rounded-full text-sm font-bold ${d.discount_percentage?'bg-green-100 text-green-800':'bg-blue-100 text-blue-800'}`; document.getElementById('deal-modal').classList.add('active'); }
         function closeModal(e) { if(!e||e.target===e.currentTarget)document.getElementById('deal-modal').classList.remove('active'); }
-        function showDayDeals(d,y=new Date().getFullYear(),m=new Date().getMonth()) { const dt=new Date(y,m,d); const dayDeals=allDeals.filter(x=>{const s=new Date(x.valid_from),e=new Date(x.valid_to);return dt>=s&&dt<=e;}); document.getElementById('day-modal-title').textContent=`Deals for ${dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}`; document.getElementById('day-modal-deals').innerHTML=dayDeals.map(x=>`<div class="p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100" onclick="closeDayModal();filteredDeals=allDeals;showDealModal(${allDeals.indexOf(x)});"><div class="flex justify-between items-start"><div><h4 class="font-semibold">${esc(x.title)}</h4><p class="text-sm text-gray-500">${esc(x.resorts?.name||'')}</p></div>${x.discount_percentage?`<span class="bg-green-500 text-white px-2 py-1 rounded text-sm font-bold">${x.discount_percentage}%</span>`:''}</div></div>`).join(''); document.getElementById('day-modal').classList.add('active'); }
+        function showDayDeals(d,y,m) { const dt=new Date(y,m,d); const dayDeals=allDeals.filter(x=>{const s=new Date(x.valid_from),e=new Date(x.valid_to);return dt>=s&&dt<=e;}); document.getElementById('day-modal-title').textContent=`Deals for ${dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}`; document.getElementById('day-modal-deals').innerHTML=dayDeals.length?dayDeals.map(x=>`<div class="p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100" onclick="closeDayModal();showDealModal(${allDeals.indexOf(x)});"><div class="flex justify-between items-start"><div><h4 class="font-semibold">${esc(x.title)}</h4><p class="text-sm text-gray-500">${esc(x.resorts?.name||'')}</p></div>${x.discount_percentage?`<span class="bg-green-500 text-white px-2 py-1 rounded text-sm font-bold">${x.discount_percentage}%</span>`:''}</div></div>`).join(''):'<p class="text-gray-500 text-center py-4">No deals for this date</p>'; document.getElementById('day-modal').classList.add('active'); }
         function closeDayModal(e) { if(!e||e.target===e.currentTarget)document.getElementById('day-modal').classList.remove('active'); }
         function showResortPicker() { const resorts=[...new Set(allDeals.map(d=>d.resorts?.name).filter(n=>n))]; document.getElementById('resort-picker-list').innerHTML=`<button onclick="filterDeals('all');closeResortModal();" class="w-full text-left p-3 rounded-lg hover:bg-gray-100 font-medium">All Resorts</button>`+resorts.map(r=>`<button onclick="filterDeals('${esc(r)}');closeResortModal();" class="w-full text-left p-3 rounded-lg hover:bg-gray-100">${esc(r)}</button>`).join(''); document.getElementById('resort-modal').classList.add('active'); }
         function closeResortModal(e) { if(!e||e.target===e.currentTarget)document.getElementById('resort-modal').classList.remove('active'); }
-        function showBestDeal() { const best=allDeals.reduce((b,d)=>(!b||(d.discount_percentage||0)>(b.discount_percentage||0))?d:b,null); if(best){filteredDeals=allDeals;showDealModal(allDeals.indexOf(best));}else showToast('No deals'); }
+        function showBestDeal() { const best=allDeals.reduce((b,d)=>(!b||(d.discount_percentage||0)>(b.discount_percentage||0))?d:b,null); if(best){showDealModal(allDeals.indexOf(best));}else showToast('No deals'); }
         function showExportModal() { document.getElementById('export-modal').classList.add('active'); }
         function closeExportModal(e) { if(!e||e.target===e.currentTarget)document.getElementById('export-modal').classList.remove('active'); }
         function downloadCSV() { const csv=[['Title','Resort','Discount','Valid From','Valid To','URL'].join(','),...allDeals.map(d=>[`"${d.title}"`,`"${d.resorts?.name||''}"`,d.discount_percentage||'',d.valid_from,d.valid_to,d.source_url||''].join(','))].join('\n'); const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`disney-deals-${new Date().toISOString().split('T')[0]}.csv`;a.click(); closeExportModal();showToast('Downloaded!'); }
