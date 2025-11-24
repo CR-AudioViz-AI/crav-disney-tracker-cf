@@ -7,15 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .deal-card:hover { transform: translateY(-2px); }
-        .calendar-day:hover { background-color: #dbeafe; }
         .calendar-day.has-deals { background-color: #dcfce7; cursor: pointer; }
-        .calendar-day.has-deals:hover { background-color: #bbf7d0; }
         .modal { display: none; }
         .modal.active { display: flex; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <!-- Header -->
     <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 py-6">
             <h1 class="text-3xl font-bold">🏰 Disney Deal Tracker</h1>
@@ -24,7 +21,6 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8">
-        <!-- Stats Bar -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div class="bg-white rounded-lg shadow p-4 text-center">
                 <div class="text-3xl font-bold text-blue-600" id="total-deals">-</div>
@@ -44,9 +40,7 @@
             </div>
         </div>
 
-        <!-- Main Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Deals List -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div class="bg-gray-50 px-6 py-4 border-b">
@@ -61,7 +55,6 @@
                 </div>
             </div>
 
-            <!-- Calendar -->
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div class="bg-gray-50 px-6 py-4 border-b">
@@ -72,29 +65,23 @@
                         <div class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-500 mb-2">
                             <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
                         </div>
-                        <div id="calendar-grid" class="grid grid-cols-7 gap-1">
-                            <!-- Calendar days will be inserted here -->
-                        </div>
+                        <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
                         <div class="mt-4 text-xs text-gray-500">
                             <span class="inline-block w-3 h-3 bg-green-200 rounded mr-1"></span> Days with deals
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Filters -->
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden mt-6">
                     <div class="bg-gray-50 px-6 py-4 border-b">
                         <h2 class="text-lg font-bold text-gray-800">🏨 Filter by Resort</h2>
                     </div>
-                    <div class="p-4 space-y-2" id="resort-filters">
-                        <!-- Resort filters will be inserted here -->
-                    </div>
+                    <div class="p-4 space-y-2" id="resort-filters"></div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Deal Detail Modal -->
     <div id="deal-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             <div class="p-6">
@@ -104,7 +91,6 @@
                 </div>
                 <h3 id="modal-title" class="text-2xl font-bold text-gray-900 mb-4"></h3>
                 <p id="modal-description" class="text-gray-600 mb-6"></p>
-                
                 <div class="space-y-3 mb-6">
                     <div class="flex items-center text-gray-700">
                         <span class="w-6">🏨</span>
@@ -119,7 +105,6 @@
                         <span id="modal-type" class="ml-2"></span>
                     </div>
                 </div>
-                
                 <a id="modal-link" href="#" target="_blank" class="block w-full bg-blue-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
                     View on Disney.com →
                 </a>
@@ -130,7 +115,6 @@
     <footer class="bg-gray-800 text-gray-400 mt-12 py-6">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <p>Disney Deal Tracker • Powered by Javari AI</p>
-            <p class="text-sm mt-1">Data updates automatically • Not affiliated with Disney</p>
         </div>
     </footer>
 
@@ -141,7 +125,6 @@
         let allDeals = [];
         let currentFilter = 'all';
 
-        // Load deals on page load
         document.addEventListener('DOMContentLoaded', () => {
             loadDeals();
             renderCalendar();
@@ -149,23 +132,29 @@
 
         async function loadDeals() {
             try {
-                const response = await fetch(`${SUPABASE_URL}/functions/v1/deals`, {
-                    headers: {
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Content-Type': 'application/json'
+                // Query Supabase REST API directly
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/deals?select=*,resorts(name,resort_type)&is_active=eq.true&order=discount_percentage.desc.nullslast`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
                     }
-                });
+                );
                 
-                const data = await response.json();
-                allDeals = data.deals || [];
+                allDeals = await response.json();
                 
-                // Update stats
+                if (!Array.isArray(allDeals)) {
+                    console.error('Invalid response:', allDeals);
+                    allDeals = [];
+                }
+                
                 document.getElementById('total-deals').textContent = allDeals.length;
                 const discounts = allDeals.map(d => d.discount_percentage).filter(d => d);
                 document.getElementById('best-discount').textContent = discounts.length ? Math.max(...discounts) + '%' : 'N/A';
                 document.getElementById('last-updated').textContent = 'Now';
                 
-                // Render deals
                 renderDeals(allDeals);
                 renderResortFilters();
                 renderCalendar();
@@ -174,7 +163,7 @@
                 console.error('Error loading deals:', error);
                 document.getElementById('deals-container').innerHTML = `
                     <div class="p-8 text-center text-red-500">
-                        <p>Error loading deals. Please refresh.</p>
+                        <p>Error loading deals: ${error.message}</p>
                     </div>
                 `;
             }
@@ -184,16 +173,12 @@
             const container = document.getElementById('deals-container');
             
             if (deals.length === 0) {
-                container.innerHTML = `
-                    <div class="p-8 text-center text-gray-500">
-                        <p>No deals found.</p>
-                    </div>
-                `;
+                container.innerHTML = '<div class="p-8 text-center text-gray-500"><p>No deals found.</p></div>';
                 return;
             }
             
-            container.innerHTML = deals.map(deal => `
-                <div class="deal-card p-6 hover:bg-gray-50 cursor-pointer transition" onclick='showDealModal(${JSON.stringify(deal).replace(/'/g, "\\'")})'>
+            container.innerHTML = deals.map((deal, index) => `
+                <div class="deal-card p-6 hover:bg-gray-50 cursor-pointer transition" onclick="showDealModal(${index})">
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="font-bold text-gray-900 text-lg flex-1 pr-4">${deal.title}</h3>
                         ${deal.discount_percentage ? `
@@ -208,12 +193,8 @@
                     </div>
                     <p class="text-gray-600 text-sm mb-3 line-clamp-2">${deal.description || ''}</p>
                     <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-500">
-                            🏨 ${deal.resorts?.name || 'Disney Resort'}
-                        </span>
-                        <span class="text-gray-400">
-                            Valid until ${new Date(deal.valid_to).toLocaleDateString()}
-                        </span>
+                        <span class="text-gray-500">🏨 ${deal.resorts?.name || 'Disney Resort'}</span>
+                        <span class="text-gray-400">Valid until ${new Date(deal.valid_to).toLocaleDateString()}</span>
                     </div>
                 </div>
             `).join('');
@@ -229,22 +210,14 @@
                 </button>
                 ${resorts.map(resort => {
                     const count = allDeals.filter(d => d.resorts?.name === resort).length;
-                    return `
-                        <button onclick="filterByResort('${resort}')" class="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${currentFilter === resort ? 'bg-blue-100 text-blue-700' : ''}">
-                            ${resort.replace("Disney's ", '')} (${count})
-                        </button>
-                    `;
+                    return `<button onclick="filterByResort('${resort}')" class="w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm ${currentFilter === resort ? 'bg-blue-100 text-blue-700' : ''}">${resort.replace("Disney's ", '')} (${count})</button>`;
                 }).join('')}
             `;
         }
 
         function filterByResort(resort) {
             currentFilter = resort;
-            if (resort === 'all') {
-                renderDeals(allDeals);
-            } else {
-                renderDeals(allDeals.filter(d => d.resorts?.name === resort));
-            }
+            renderDeals(resort === 'all' ? allDeals : allDeals.filter(d => d.resorts?.name === resort));
             renderResortFilters();
         }
 
@@ -258,54 +231,42 @@
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             
-            // Find days with deals
             const daysWithDeals = new Set();
             allDeals.forEach(deal => {
                 const start = new Date(deal.valid_from);
                 const end = new Date(deal.valid_to);
                 for (let d = 1; d <= daysInMonth; d++) {
                     const date = new Date(year, month, d);
-                    if (date >= start && date <= end) {
-                        daysWithDeals.add(d);
-                    }
+                    if (date >= start && date <= end) daysWithDeals.add(d);
                 }
             });
             
             let html = '';
-            
-            // Empty cells for days before first of month
-            for (let i = 0; i < firstDay; i++) {
-                html += '<div class="p-2"></div>';
-            }
-            
-            // Days of month
+            for (let i = 0; i < firstDay; i++) html += '<div class="p-2"></div>';
             for (let day = 1; day <= daysInMonth; day++) {
                 const hasDeals = daysWithDeals.has(day);
                 const isToday = day === now.getDate();
-                html += `
-                    <div class="calendar-day p-2 text-center rounded text-sm ${hasDeals ? 'has-deals font-medium' : 'text-gray-400'} ${isToday ? 'ring-2 ring-blue-500' : ''}">
-                        ${day}
-                    </div>
-                `;
+                html += `<div class="calendar-day p-2 text-center rounded text-sm ${hasDeals ? 'has-deals font-medium' : 'text-gray-400'} ${isToday ? 'ring-2 ring-blue-500' : ''}">${day}</div>`;
             }
-            
             document.getElementById('calendar-grid').innerHTML = html;
         }
 
-        function showDealModal(deal) {
+        function showDealModal(index) {
+            const deal = allDeals[index];
             document.getElementById('modal-title').textContent = deal.title;
-            document.getElementById('modal-description').textContent = deal.description || 'No additional details available.';
+            document.getElementById('modal-description').textContent = deal.description || '';
             document.getElementById('modal-resort').textContent = deal.resorts?.name || 'Disney Resort';
             document.getElementById('modal-dates').textContent = `${new Date(deal.valid_from).toLocaleDateString()} - ${new Date(deal.valid_to).toLocaleDateString()}`;
-            document.getElementById('modal-type').textContent = deal.deal_type?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Special Offer';
+            document.getElementById('modal-type').textContent = (deal.deal_type || 'special').replace('_', ' ');
             document.getElementById('modal-link').href = deal.source_url || 'https://disneyworld.disney.go.com/special-offers/';
             
+            const badge = document.getElementById('modal-badge');
             if (deal.discount_percentage) {
-                document.getElementById('modal-badge').textContent = deal.discount_percentage + '% OFF';
-                document.getElementById('modal-badge').className = 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold';
+                badge.textContent = deal.discount_percentage + '% OFF';
+                badge.className = 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold';
             } else {
-                document.getElementById('modal-badge').textContent = 'Special Offer';
-                document.getElementById('modal-badge').className = 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold';
+                badge.textContent = 'Special Offer';
+                badge.className = 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold';
             }
             
             document.getElementById('deal-modal').classList.add('active');
@@ -315,15 +276,10 @@
             document.getElementById('deal-modal').classList.remove('active');
         }
 
-        // Close modal on outside click
         document.getElementById('deal-modal').addEventListener('click', (e) => {
             if (e.target.id === 'deal-modal') closeModal();
         });
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeModal();
-        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
     </script>
 </body>
 </html>
