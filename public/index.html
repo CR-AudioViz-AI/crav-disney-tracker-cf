@@ -21,8 +21,13 @@
         .tab-btn.active { background: white; color: #3b82f6; border-bottom: 3px solid #3b82f6; }
         .hotel-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
         .nav-btn:hover { background: #e5e7eb; }
+        .secret-card { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); }
+        .secret-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(99,102,241,0.4); }
+        .pulse-dot { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
+        .glow { box-shadow: 0 0 20px rgba(234,179,8,0.5); }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -31,14 +36,14 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 class="text-3xl font-bold">🏰 Disney Deal Tracker</h1>
-                    <p class="text-blue-100 mt-1">Current deals + Hotel booking links</p>
+                    <p class="text-blue-100 mt-1">Current deals + Hotel booking secrets</p>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="refreshDeals()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
                         <span id="refresh-icon">🔄</span> Refresh
                     </button>
-                    <button onclick="showTab('hotels')" class="bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-4 py-2 rounded-lg font-bold transition">
-                        🏨 Find Hotels
+                    <button onclick="showSecretsTab()" class="bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-4 py-2 rounded-lg font-bold transition glow">
+                        🔓 Deal Hunter
                     </button>
                 </div>
             </div>
@@ -51,6 +56,7 @@
                 <button onclick="showTab('deals')" class="tab-btn active px-6 py-4 font-medium text-gray-600 transition" data-tab="deals">🔥 Deals</button>
                 <button onclick="showTab('hotels')" class="tab-btn px-6 py-4 font-medium text-gray-600 transition" data-tab="hotels">🏨 Hotels</button>
                 <button onclick="showTab('calendar')" class="tab-btn px-6 py-4 font-medium text-gray-600 transition" data-tab="calendar">📅 Calendar</button>
+                <button onclick="showSecretsTab()" class="tab-btn px-6 py-4 font-medium text-yellow-600 transition" data-tab="secrets">🔓 Secrets</button>
             </div>
         </div>
     </div>
@@ -70,9 +76,9 @@
                 <div class="text-4xl font-bold text-purple-600" id="resorts-count">-</div>
                 <div class="text-gray-500 text-sm mt-1">Resorts</div>
             </div>
-            <div onclick="showTab('hotels')" class="stat-card clickable bg-white rounded-xl shadow-lg p-5 text-center border-t-4 border-orange-500">
-                <div class="text-4xl font-bold text-orange-600">17</div>
-                <div class="text-gray-500 text-sm mt-1">Hotels Listed</div>
+            <div onclick="showSecretsTab()" class="stat-card clickable bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl shadow-lg p-5 text-center">
+                <div class="text-4xl font-bold text-white">🔓</div>
+                <div class="text-white/90 text-sm mt-1 font-semibold">Deal Hunter</div>
             </div>
         </div>
 
@@ -92,7 +98,6 @@
                     </div>
                 </div>
                 <div class="space-y-6">
-                    <!-- Mini Calendar -->
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-b">
                             <div class="flex items-center justify-between">
@@ -108,7 +113,6 @@
                             <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
                         </div>
                     </div>
-                    <!-- Resort Stats -->
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b">
                             <h2 class="text-lg font-bold text-gray-800">🏨 Deals by Resort</h2>
@@ -124,23 +128,15 @@
             <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
                 <div class="bg-gradient-to-r from-blue-500 to-purple-500 px-6 py-6 text-white">
                     <h2 class="text-2xl font-bold mb-2">🏨 Book Disney Area Hotels</h2>
-                    <p class="text-blue-100">Click any hotel to check real availability on their official website</p>
+                    <p class="text-blue-100">Click any hotel to check real availability</p>
                 </div>
                 <div class="p-6">
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                        <p class="text-blue-800 text-sm">
-                            <strong>💡 How this works:</strong> Click "Check Availability" to go directly to the hotel's official booking page where you'll see <strong>real prices and availability</strong>. Use "Compare Prices" to search multiple booking sites.
-                        </p>
-                    </div>
-                    
-                    <!-- Category Tabs -->
                     <div class="flex flex-wrap gap-2 mb-6">
-                        <button onclick="filterHotels('all')" class="hotel-filter active px-4 py-2 rounded-full font-medium bg-blue-500 text-white" data-cat="all">All (17)</button>
-                        <button onclick="filterHotels('disney')" class="hotel-filter px-4 py-2 rounded-full font-medium bg-gray-200 text-gray-700" data-cat="disney">🏰 Disney Resorts (9)</button>
-                        <button onclick="filterHotels('partner')" class="hotel-filter px-4 py-2 rounded-full font-medium bg-gray-200 text-gray-700" data-cat="partner">🤝 Partner Hotels (4)</button>
-                        <button onclick="filterHotels('budget')" class="hotel-filter px-4 py-2 rounded-full font-medium bg-gray-200 text-gray-700" data-cat="budget">💰 Budget Options (4)</button>
+                        <button onclick="filterHotels('all')" class="hotel-filter active px-4 py-2 rounded-full font-medium bg-blue-500 text-white" data-cat="all">All</button>
+                        <button onclick="filterHotels('disney')" class="hotel-filter px-4 py-2 rounded-full font-medium bg-gray-200 text-gray-700" data-cat="disney">🏰 Disney</button>
+                        <button onclick="filterHotels('partner')" class="hotel-filter px-4 py-2 rounded-full font-medium bg-gray-200 text-gray-700" data-cat="partner">🤝 Partner</button>
+                        <button onclick="filterHotels('budget')" class="hotel-filter px-4 py-2 rounded-full font-medium bg-gray-200 text-gray-700" data-cat="budget">💰 Budget</button>
                     </div>
-                    
                     <div id="hotels-container" class="space-y-4"></div>
                 </div>
             </div>
@@ -166,6 +162,276 @@
                 </div>
             </div>
         </div>
+
+        <!-- 🔓 SECRETS TAB - DEAL HUNTER PRO -->
+        <div id="secrets-tab" class="tab-content hidden">
+            <!-- Password Gate -->
+            <div id="secrets-gate" class="max-w-md mx-auto">
+                <div class="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-2xl shadow-2xl p-8 text-white text-center">
+                    <div class="text-6xl mb-4">🔐</div>
+                    <h2 class="text-2xl font-bold mb-2">Deal Hunter Pro</h2>
+                    <p class="text-purple-200 mb-6">Private access for Roy & Cindy</p>
+                    <input type="password" id="secrets-password" placeholder="Enter password" 
+                        class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 mb-4 text-center text-lg"
+                        onkeypress="if(event.key==='Enter')unlockSecrets()">
+                    <button onclick="unlockSecrets()" class="w-full bg-yellow-400 hover:bg-yellow-300 text-yellow-900 font-bold py-3 rounded-lg transition">
+                        🔓 Unlock Secrets
+                    </button>
+                    <p id="password-error" class="text-red-300 mt-3 hidden">Wrong password. Try again.</p>
+                </div>
+            </div>
+
+            <!-- Unlocked Content -->
+            <div id="secrets-content" class="hidden space-y-6">
+                <!-- Magic Hour Countdown -->
+                <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl shadow-xl p-6 text-white">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold flex items-center gap-2">
+                                <span class="pulse-dot">⏰</span> Magic Hour Countdown
+                            </h2>
+                            <p class="text-amber-100">Hotels drop prices at 4:00 PM Orlando time to fill empty rooms</p>
+                        </div>
+                        <div class="text-center">
+                            <div id="magic-hour-countdown" class="text-4xl font-mono font-bold">--:--:--</div>
+                            <div class="text-amber-200 text-sm">until 4:00 PM EST</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Hunt Buttons -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a href="https://www.priceline.com/stay/search/hotels/?rooms=1&adults=2&destination=Walt%20Disney%20World%2C%20FL&express=1" target="_blank" rel="noopener"
+                        class="secret-card rounded-xl p-6 text-white clickable block">
+                        <div class="flex items-center gap-4">
+                            <div class="text-4xl">🎯</div>
+                            <div>
+                                <h3 class="text-xl font-bold">Priceline Express Deals</h3>
+                                <p class="text-indigo-200">Pre-filtered for Disney World area</p>
+                                <p class="text-yellow-300 text-sm mt-1">💡 Best for Disney resort inventory</p>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="https://www.hotwire.com/hotels/search?destination=Walt%20Disney%20World%2C%20FL" target="_blank" rel="noopener"
+                        class="secret-card rounded-xl p-6 text-white clickable block">
+                        <div class="flex items-center gap-4">
+                            <div class="text-4xl">🔥</div>
+                            <div>
+                                <h3 class="text-xl font-bold">Hotwire Hot Rates</h3>
+                                <p class="text-indigo-200">Mystery deals with amenity reveals</p>
+                                <p class="text-yellow-300 text-sm mt-1">💡 Shows more hotel details upfront</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Reveal Tools -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-4 text-white">
+                        <h2 class="text-xl font-bold">🔍 Reveal the Mystery Hotel BEFORE Booking</h2>
+                        <p class="text-emerald-100 text-sm">Use these tools to identify which hotel you're getting</p>
+                    </div>
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <a href="https://roomrevealer.com/orlando_fl/" target="_blank" rel="noopener"
+                            class="border-2 border-emerald-200 hover:border-emerald-400 rounded-xl p-4 text-center transition">
+                            <div class="text-3xl mb-2">🔮</div>
+                            <h3 class="font-bold text-gray-800">RoomRevealer</h3>
+                            <p class="text-gray-500 text-sm">Auto-reveals Hotwire/Priceline</p>
+                        </a>
+                        <a href="https://www.betterbidding.com/index.php?showforum=79" target="_blank" rel="noopener"
+                            class="border-2 border-emerald-200 hover:border-emerald-400 rounded-xl p-4 text-center transition">
+                            <div class="text-3xl mb-2">👥</div>
+                            <h3 class="font-bold text-gray-800">BetterBidding</h3>
+                            <p class="text-gray-500 text-sm">22,000+ member forum</p>
+                        </a>
+                        <a href="https://www.hoteldealsrevealed.com/hotelinventory/hotwire/fl/orlando" target="_blank" rel="noopener"
+                            class="border-2 border-emerald-200 hover:border-emerald-400 rounded-xl p-4 text-center transition">
+                            <div class="text-3xl mb-2">📋</div>
+                            <h3 class="font-bold text-gray-800">HotelDealsRevealed</h3>
+                            <p class="text-gray-500 text-sm">Crowdsourced hotel lists</p>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Disney Resort Identification Guide -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white">
+                        <h2 class="text-xl font-bold">🏰 How to Identify Disney Resorts on Priceline/Hotwire</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-bold">Star Rating</th>
+                                        <th class="px-4 py-3 text-left font-bold">Location</th>
+                                        <th class="px-4 py-3 text-left font-bold">Key Indicators</th>
+                                        <th class="px-4 py-3 text-left font-bold">Likely Resort</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y">
+                                    <tr class="hover:bg-blue-50">
+                                        <td class="px-4 py-3"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold">3 ⭐</span></td>
+                                        <td class="px-4 py-3">Bonnet Creek</td>
+                                        <td class="px-4 py-3">Airport shuttle, No resort fee, Free parking</td>
+                                        <td class="px-4 py-3 font-semibold text-blue-600">Value Resort (Pop Century, All-Stars, Art of Animation)</td>
+                                    </tr>
+                                    <tr class="hover:bg-purple-50">
+                                        <td class="px-4 py-3"><span class="bg-purple-100 text-purple-700 px-2 py-1 rounded font-bold">3.5 ⭐</span></td>
+                                        <td class="px-4 py-3">Bonnet Creek</td>
+                                        <td class="px-4 py-3">Airport shuttle, No resort fee</td>
+                                        <td class="px-4 py-3 font-semibold text-purple-600">Moderate (Caribbean Beach, Coronado, Port Orleans)</td>
+                                    </tr>
+                                    <tr class="hover:bg-amber-50">
+                                        <td class="px-4 py-3"><span class="bg-amber-100 text-amber-700 px-2 py-1 rounded font-bold">4 ⭐</span></td>
+                                        <td class="px-4 py-3">Bonnet Creek</td>
+                                        <td class="px-4 py-3">Airport shuttle, "Lodge" in name</td>
+                                        <td class="px-4 py-3 font-semibold text-amber-600">Deluxe (Grand Floridian, Polynesian, Wilderness Lodge, AKL)</td>
+                                    </tr>
+                                    <tr class="hover:bg-green-50">
+                                        <td class="px-4 py-3"><span class="bg-green-100 text-green-700 px-2 py-1 rounded font-bold">4 ⭐</span></td>
+                                        <td class="px-4 py-3">Bonnet Creek</td>
+                                        <td class="px-4 py-3">HAS resort fee ($35-45)</td>
+                                        <td class="px-4 py-3 font-semibold text-green-600">Swan & Dolphin (still great - walk to Epcot!)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <p class="text-yellow-800 font-medium">🎯 KEY RULE: If it says "NO RESORT FEE" and is in Bonnet Creek area, it's almost certainly a Disney-owned resort!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timing Secrets -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-4 text-white">
+                        <h2 class="text-xl font-bold">⏰ Timing Secrets (Research-Backed)</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl p-4 text-center">
+                                <div class="text-3xl font-bold text-rose-600">15 days</div>
+                                <div class="text-gray-600 text-sm">before arrival = 13% savings</div>
+                                <div class="text-gray-400 text-xs mt-1">vs booking 4 months out</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 text-center">
+                                <div class="text-3xl font-bold text-amber-600">4:00 PM</div>
+                                <div class="text-gray-600 text-sm">"Magic Hour" for deals</div>
+                                <div class="text-gray-400 text-xs mt-1">Hotels drop prices then</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 text-center">
+                                <div class="text-3xl font-bold text-emerald-600">Sunday</div>
+                                <div class="text-gray-600 text-sm">check-in = 9% cheaper</div>
+                                <div class="text-gray-400 text-xs mt-1">vs Friday check-in</div>
+                            </div>
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 text-center">
+                                <div class="text-3xl font-bold text-indigo-600">Tuesday</div>
+                                <div class="text-gray-600 text-sm">booking = 16% savings</div>
+                                <div class="text-gray-400 text-xs mt-1">vs Friday booking</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deal Log -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-slate-700 to-slate-800 px-6 py-4 text-white flex justify-between items-center">
+                        <div>
+                            <h2 class="text-xl font-bold">📝 Your Deal Log</h2>
+                            <p class="text-slate-300 text-sm">Track deals you find for comparison</p>
+                        </div>
+                        <button onclick="addDealLog()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition">+ Add Deal</button>
+                    </div>
+                    <div class="p-6">
+                        <div id="deal-log-container" class="space-y-3">
+                            <p class="text-gray-400 text-center py-8" id="no-logs">No deals logged yet. Click "Add Deal" when you find one!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Availability (Manual Check Links) -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 text-white">
+                        <h2 class="text-xl font-bold">🔎 Quick Availability Checks</h2>
+                        <p class="text-cyan-100 text-sm">One-click links to check each Disney resort</p>
+                    </div>
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <a href="https://disneyworld.disney.go.com/resorts/pop-century-resort/" target="_blank" class="flex items-center gap-3 p-3 border rounded-lg hover:bg-blue-50 transition">
+                            <span class="text-2xl">🎬</span>
+                            <div><div class="font-semibold">Pop Century</div><div class="text-xs text-gray-500">Value • From $169</div></div>
+                        </a>
+                        <a href="https://disneyworld.disney.go.com/resorts/art-of-animation-resort/" target="_blank" class="flex items-center gap-3 p-3 border rounded-lg hover:bg-blue-50 transition">
+                            <span class="text-2xl">🎨</span>
+                            <div><div class="font-semibold">Art of Animation</div><div class="text-xs text-gray-500">Value • From $189</div></div>
+                        </a>
+                        <a href="https://disneyworld.disney.go.com/resorts/caribbean-beach-resort/" target="_blank" class="flex items-center gap-3 p-3 border rounded-lg hover:bg-blue-50 transition">
+                            <span class="text-2xl">🏝️</span>
+                            <div><div class="font-semibold">Caribbean Beach</div><div class="text-xs text-gray-500">Moderate • From $249</div></div>
+                        </a>
+                        <a href="https://disneyworld.disney.go.com/resorts/coronado-springs-resort/" target="_blank" class="flex items-center gap-3 p-3 border rounded-lg hover:bg-blue-50 transition">
+                            <span class="text-2xl">🌵</span>
+                            <div><div class="font-semibold">Coronado Springs</div><div class="text-xs text-gray-500">Moderate • From $259</div></div>
+                        </a>
+                        <a href="https://disneyworld.disney.go.com/resorts/polynesian-resort/" target="_blank" class="flex items-center gap-3 p-3 border rounded-lg hover:bg-blue-50 transition">
+                            <span class="text-2xl">🌺</span>
+                            <div><div class="font-semibold">Polynesian Village</div><div class="text-xs text-gray-500">Deluxe • From $599</div></div>
+                        </a>
+                        <a href="https://disneyworld.disney.go.com/resorts/grand-floridian-resort-and-spa/" target="_blank" class="flex items-center gap-3 p-3 border rounded-lg hover:bg-blue-50 transition">
+                            <span class="text-2xl">👑</span>
+                            <div><div class="font-semibold">Grand Floridian</div><div class="text-xs text-gray-500">Deluxe • From $649</div></div>
+                        </a>
+                        <a href="https://disneyworld.disney.go.com/resorts/animal-kingdom-lodge/" target="_blank" class="flex items-center gap-3 p-3 border rounded-lg hover:bg-blue-50 transition">
+                            <span class="text-2xl">🦁</span>
+                            <div><div class="font-semibold">Animal Kingdom Lodge</div><div class="text-xs text-gray-500">Deluxe • From $399</div></div>
+                        </a>
+                        <a href="https://disneyworld.disney.go.com/resorts/wilderness-lodge-resort/" target="_blank" class="flex items-center gap-3 p-3 border rounded-lg hover:bg-blue-50 transition">
+                            <span class="text-2xl">🌲</span>
+                            <div><div class="font-semibold">Wilderness Lodge</div><div class="text-xs text-gray-500">Deluxe • From $399</div></div>
+                        </a>
+                        <a href="https://www.marriott.com/en-us/hotels/mcowh-walt-disney-world-swan/overview/" target="_blank" class="flex items-center gap-3 p-3 border rounded-lg hover:bg-purple-50 transition">
+                            <span class="text-2xl">🦢</span>
+                            <div><div class="font-semibold">Swan & Dolphin</div><div class="text-xs text-gray-500">Partner • Walk to Epcot!</div></div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Pro Tips -->
+                <div class="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-2xl p-6 text-white">
+                    <h2 class="text-xl font-bold mb-4">💎 Pro Strategies for Roy & Cindy</h2>
+                    <div class="space-y-4">
+                        <div class="flex gap-3">
+                            <span class="text-2xl">1️⃣</span>
+                            <div>
+                                <h3 class="font-bold">The "Book & Watch" Strategy</h3>
+                                <p class="text-purple-200 text-sm">Book a refundable rate now, keep checking Priceline/Hotwire. If you find a deal, book it and cancel the original.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-2xl">2️⃣</span>
+                            <div>
+                                <h3 class="font-bold">The Priceline Rebid Trick</h3>
+                                <p class="text-purple-200 text-sm">Start with 5-star bids, then 4-star, then 3-star. Each star level counts as a separate bid - no 24-hour wait!</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-2xl">3️⃣</span>
+                            <div>
+                                <h3 class="font-bold">Check at 4PM Orlando Time</h3>
+                                <p class="text-purple-200 text-sm">This is when hotels release day-of inventory at steep discounts. Perfect for last-minute trips!</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="text-2xl">4️⃣</span>
+                            <div>
+                                <h3 class="font-bold">15 Days Out = Sweet Spot</h3>
+                                <p class="text-purple-200 text-sm">Studies show booking 15 days before arrival is 13% cheaper than 4 months out on average.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Modals -->
@@ -181,6 +447,45 @@
                     <div class="flex items-center"><span class="w-8 text-xl">📅</span><span id="modal-dates"></span></div>
                 </div>
                 <a id="modal-link" href="#" target="_blank" class="block w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white text-center py-4 rounded-xl font-bold text-lg">View on Disney.com →</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-deal-modal" class="modal-overlay fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onclick="closeAddDealModal(event)">
+        <div class="modal-content bg-white rounded-2xl max-w-md w-full shadow-2xl" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <h3 class="text-xl font-bold mb-4">📝 Log a Deal You Found</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Hotel Name</label>
+                        <input type="text" id="log-hotel" class="w-full px-3 py-2 border rounded-lg" placeholder="e.g., Pop Century">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price Per Night</label>
+                        <input type="text" id="log-price" class="w-full px-3 py-2 border rounded-lg" placeholder="e.g., $89">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Source</label>
+                        <select id="log-source" class="w-full px-3 py-2 border rounded-lg">
+                            <option>Priceline Express Deal</option>
+                            <option>Hotwire Hot Rate</option>
+                            <option>Disney Direct</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Travel Dates</label>
+                        <input type="text" id="log-dates" class="w-full px-3 py-2 border rounded-lg" placeholder="e.g., Dec 15-18">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <textarea id="log-notes" class="w-full px-3 py-2 border rounded-lg" rows="2" placeholder="Any additional info..."></textarea>
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button onclick="closeAddDealModal()" class="flex-1 py-2 text-gray-500 border rounded-lg">Cancel</button>
+                    <button onclick="saveDealLog()" class="flex-1 py-2 bg-indigo-600 text-white rounded-lg font-bold">Save Deal</button>
+                </div>
             </div>
         </div>
     </div>
@@ -212,79 +517,152 @@
     <footer class="bg-gray-800 text-gray-400 mt-12 py-8">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <p>Disney Deal Tracker • <span class="text-purple-400">Javari AI</span> • © 2025 CR AudioViz AI, LLC</p>
+            <p class="text-gray-500 text-sm mt-2">🔓 Deal Hunter Pro - Private Access</p>
         </div>
     </footer>
 
     <script>
         const SUPABASE_URL = 'https://kteobfyferrukqeolofj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0ZW9iZnlmZXJydWtxZW9sb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxOTcyNjYsImV4cCI6MjA3NzU1NzI2Nn0.uy-jlF_z6qVb8qogsNyGDLHqT4HhmdRhLrW7zPv3qhY';
-
+        
+        // Simple password - Roy can change this
+        const SECRET_PASSWORD = 'disney2025';
+        
         let allDeals = [], filteredDeals = [], currentFilter = 'all';
         let miniCalendarMonth = new Date(), currentMonth = new Date();
         let currentHotelFilter = 'all';
+        let dealLogs = JSON.parse(localStorage.getItem('dealLogs') || '[]');
 
-        // VERIFIED WORKING HOTEL LINKS - FIXED GOOGLE URLS
         const HOTELS = [
-            // Disney Value Resorts
-            { name: "Pop Century Resort", fullName: "Disney's Pop Century Resort", cat: 'disney', type: 'Value', price: 'From $169/night', rating: '4.2',
-              url: 'https://disneyworld.disney.go.com/resorts/pop-century-resort/', 
-              features: ['Skyliner Access', 'Food Court', 'Pool'] },
-            { name: "Art of Animation Resort", fullName: "Disney's Art of Animation Resort", cat: 'disney', type: 'Value', price: 'From $189/night', rating: '4.4',
-              url: 'https://disneyworld.disney.go.com/resorts/art-of-animation-resort/',
-              features: ['Skyliner Access', 'Family Suites', 'Themed Pools'] },
-            { name: "All-Star Movies Resort", fullName: "Disney's All-Star Movies Resort", cat: 'disney', type: 'Value', price: 'From $149/night', rating: '4.0',
-              url: 'https://disneyworld.disney.go.com/resorts/all-star-movies-resort/',
-              features: ['Bus Transport', 'Food Court', '2 Pools'] },
-            // Disney Moderate Resorts
-            { name: "Caribbean Beach Resort", fullName: "Disney's Caribbean Beach Resort", cat: 'disney', type: 'Moderate', price: 'From $249/night', rating: '4.1',
-              url: 'https://disneyworld.disney.go.com/resorts/caribbean-beach-resort/',
-              features: ['Skyliner Access', 'Beach', 'Multiple Pools'] },
-            { name: "Coronado Springs Resort", fullName: "Disney's Coronado Springs Resort", cat: 'disney', type: 'Moderate', price: 'From $259/night', rating: '4.2',
-              url: 'https://disneyworld.disney.go.com/resorts/coronado-springs-resort/',
-              features: ['Convention Center', 'Gran Destino Tower', 'Spa'] },
-            // Disney Deluxe Resorts
-            { name: "Grand Floridian Resort", fullName: "Disney's Grand Floridian Resort & Spa", cat: 'disney', type: 'Deluxe', price: 'From $649/night', rating: '4.7',
-              url: 'https://disneyworld.disney.go.com/resorts/grand-floridian-resort-and-spa/',
-              features: ['Monorail', 'Walk to Magic Kingdom', 'Spa', 'Fine Dining'] },
-            { name: "Polynesian Village Resort", fullName: "Disney's Polynesian Village Resort", cat: 'disney', type: 'Deluxe', price: 'From $599/night', rating: '4.6',
-              url: 'https://disneyworld.disney.go.com/resorts/polynesian-resort/',
-              features: ['Monorail', 'Beach', "Trader Sam's", 'Fireworks View'] },
-            { name: "Contemporary Resort", fullName: "Disney's Contemporary Resort", cat: 'disney', type: 'Deluxe', price: 'From $499/night', rating: '4.5',
-              url: 'https://disneyworld.disney.go.com/resorts/contemporary-resort/',
-              features: ['Monorail', 'Walk to Magic Kingdom', 'Rooftop Restaurant'] },
-            { name: "Animal Kingdom Lodge", fullName: "Disney's Animal Kingdom Lodge", cat: 'disney', type: 'Deluxe', price: 'From $399/night', rating: '4.8',
-              url: 'https://disneyworld.disney.go.com/resorts/animal-kingdom-lodge/',
-              features: ['Savanna Views', 'African Dining', 'Animals'] },
-            // Partner Hotels
-            { name: "Drury Plaza Hotel Disney Springs", fullName: "Drury Plaza Hotel Orlando - Disney Springs", cat: 'partner', type: 'Partner Hotel', price: 'From $159/night', rating: '4.6',
-              url: 'https://www.druryhotels.com/locations/orlando-fl/drury-plaza-hotel-orlando-disney-springs-area',
-              features: ['Free Breakfast', 'Free Evening Reception', 'Pool'] },
-            { name: "Hilton Buena Vista Palace", fullName: "Hilton Orlando Buena Vista Palace", cat: 'partner', type: 'Partner Hotel', price: 'From $189/night', rating: '4.4',
-              url: 'https://www.hilton.com/en/hotels/mcoobhh-hilton-orlando-buena-vista-palace/',
-              features: ['Disney Springs Walking', 'Spa', 'Multiple Restaurants'] },
-            { name: "Wyndham Garden Disney Springs", fullName: "Wyndham Garden Lake Buena Vista", cat: 'partner', type: 'Partner Hotel', price: 'From $129/night', rating: '4.3',
-              url: 'https://www.wyndhamhotels.com/wyndham-garden/lake-buena-vista-florida/wyndham-garden-lake-buena-vista-disney-springs-resort-area/overview',
-              features: ['Near Disney Springs', 'Free Parking', 'Pool'] },
-            { name: "DoubleTree Disney Springs", fullName: "DoubleTree Suites by Hilton - Disney Springs", cat: 'partner', type: 'Partner Hotel', price: 'From $179/night', rating: '4.3',
-              url: 'https://www.hilton.com/en/hotels/mcoordt-doubletree-suites-by-hilton-orlando-disney-springs-area/',
-              features: ['All Suites', 'Free Cookies', 'Disney Springs Walking'] },
-            // Budget Options
-            { name: "Comfort Suites Maingate", fullName: "Comfort Suites Maingate East", cat: 'budget', type: 'Budget Hotel', price: 'From $89/night', rating: '4.0',
-              url: 'https://www.choicehotels.com/florida/kissimmee/comfort-suites-hotels/fl478',
-              features: ['Free Breakfast', 'Pool', 'Near Disney'] },
-            { name: "Best Western Lake Buena Vista", fullName: "Best Western Lake Buena Vista Resort", cat: 'budget', type: 'Budget Hotel', price: 'From $99/night', rating: '3.9',
-              url: 'https://www.bestwestern.com/en_US/book/hotels-in-orlando/best-western-lake-buena-vista-disney-springs-resort-area/propertyCode.10192.html',
-              features: ['Free Shuttle', 'Pool', 'Near Disney Springs'] },
-            { name: "La Quinta Orlando", fullName: "La Quinta Inn & Suites Orlando", cat: 'budget', type: 'Budget Hotel', price: 'From $79/night', rating: '4.1',
-              url: 'https://www.wyndhamhotels.com/laquinta/kissimmee-florida/la-quinta-inn-and-suites-kissimmee-lake-buena-vista-south/overview',
-              features: ['Free Breakfast', 'Pet Friendly', 'Pool'] },
-            { name: "Holiday Inn Disney Springs", fullName: "Holiday Inn Orlando - Disney Springs", cat: 'budget', type: 'Budget Hotel', price: 'From $119/night', rating: '4.2',
-              url: 'https://www.ihg.com/holidayinn/hotels/us/en/lake-buena-vista/mcods/hoteldetail',
-              features: ['Near Disney Springs', 'Pool', 'Restaurant'] }
+            { name: "Pop Century Resort", fullName: "Disney's Pop Century Resort", cat: 'disney', type: 'Value', price: 'From $169/night', rating: '4.2', url: 'https://disneyworld.disney.go.com/resorts/pop-century-resort/', features: ['Skyliner Access', 'Food Court', 'Pool'] },
+            { name: "Art of Animation Resort", fullName: "Disney's Art of Animation Resort", cat: 'disney', type: 'Value', price: 'From $189/night', rating: '4.4', url: 'https://disneyworld.disney.go.com/resorts/art-of-animation-resort/', features: ['Skyliner Access', 'Family Suites', 'Themed Pools'] },
+            { name: "All-Star Movies Resort", fullName: "Disney's All-Star Movies Resort", cat: 'disney', type: 'Value', price: 'From $149/night', rating: '4.0', url: 'https://disneyworld.disney.go.com/resorts/all-star-movies-resort/', features: ['Bus Transport', 'Food Court', '2 Pools'] },
+            { name: "Caribbean Beach Resort", fullName: "Disney's Caribbean Beach Resort", cat: 'disney', type: 'Moderate', price: 'From $249/night', rating: '4.1', url: 'https://disneyworld.disney.go.com/resorts/caribbean-beach-resort/', features: ['Skyliner Access', 'Beach', 'Multiple Pools'] },
+            { name: "Coronado Springs Resort", fullName: "Disney's Coronado Springs Resort", cat: 'disney', type: 'Moderate', price: 'From $259/night', rating: '4.2', url: 'https://disneyworld.disney.go.com/resorts/coronado-springs-resort/', features: ['Convention Center', 'Gran Destino Tower', 'Spa'] },
+            { name: "Grand Floridian Resort", fullName: "Disney's Grand Floridian Resort & Spa", cat: 'disney', type: 'Deluxe', price: 'From $649/night', rating: '4.7', url: 'https://disneyworld.disney.go.com/resorts/grand-floridian-resort-and-spa/', features: ['Monorail', 'Walk to Magic Kingdom', 'Spa', 'Fine Dining'] },
+            { name: "Polynesian Village Resort", fullName: "Disney's Polynesian Village Resort", cat: 'disney', type: 'Deluxe', price: 'From $599/night', rating: '4.6', url: 'https://disneyworld.disney.go.com/resorts/polynesian-resort/', features: ['Monorail', 'Beach', "Trader Sam's", 'Fireworks View'] },
+            { name: "Contemporary Resort", fullName: "Disney's Contemporary Resort", cat: 'disney', type: 'Deluxe', price: 'From $499/night', rating: '4.5', url: 'https://disneyworld.disney.go.com/resorts/contemporary-resort/', features: ['Monorail', 'Walk to Magic Kingdom', 'Rooftop Restaurant'] },
+            { name: "Animal Kingdom Lodge", fullName: "Disney's Animal Kingdom Lodge", cat: 'disney', type: 'Deluxe', price: 'From $399/night', rating: '4.8', url: 'https://disneyworld.disney.go.com/resorts/animal-kingdom-lodge/', features: ['Savanna Views', 'African Dining', 'Animals'] },
+            { name: "Drury Plaza Hotel", fullName: "Drury Plaza Hotel Orlando", cat: 'partner', type: 'Partner', price: 'From $159/night', rating: '4.6', url: 'https://www.druryhotels.com/locations/orlando-fl/drury-plaza-hotel-orlando-disney-springs-area', features: ['Free Breakfast', 'Free Evening Reception', 'Pool'] },
+            { name: "Hilton Buena Vista Palace", fullName: "Hilton Orlando Buena Vista Palace", cat: 'partner', type: 'Partner', price: 'From $189/night', rating: '4.4', url: 'https://www.hilton.com/en/hotels/mcoobhh-hilton-orlando-buena-vista-palace/', features: ['Disney Springs Walking', 'Spa', 'Multiple Restaurants'] },
+            { name: "Wyndham Garden", fullName: "Wyndham Garden Lake Buena Vista", cat: 'partner', type: 'Partner', price: 'From $129/night', rating: '4.3', url: 'https://www.wyndhamhotels.com/wyndham-garden/lake-buena-vista-florida/wyndham-garden-lake-buena-vista-disney-springs-resort-area/overview', features: ['Near Disney Springs', 'Free Parking', 'Pool'] },
+            { name: "DoubleTree Disney Springs", fullName: "DoubleTree Suites Disney Springs", cat: 'partner', type: 'Partner', price: 'From $179/night', rating: '4.3', url: 'https://www.hilton.com/en/hotels/mcoordt-doubletree-suites-by-hilton-orlando-disney-springs-area/', features: ['All Suites', 'Free Cookies', 'Disney Springs Walking'] },
+            { name: "Comfort Suites Maingate", fullName: "Comfort Suites Maingate East", cat: 'budget', type: 'Budget', price: 'From $89/night', rating: '4.0', url: 'https://www.choicehotels.com/florida/kissimmee/comfort-suites-hotels/fl478', features: ['Free Breakfast', 'Pool', 'Near Disney'] },
+            { name: "Best Western Lake Buena Vista", fullName: "Best Western Lake Buena Vista", cat: 'budget', type: 'Budget', price: 'From $99/night', rating: '3.9', url: 'https://www.bestwestern.com/en_US/book/hotels-in-orlando/best-western-lake-buena-vista-disney-springs-resort-area/propertyCode.10192.html', features: ['Free Shuttle', 'Pool', 'Near Disney Springs'] },
+            { name: "La Quinta Orlando", fullName: "La Quinta Inn & Suites Orlando", cat: 'budget', type: 'Budget', price: 'From $79/night', rating: '4.1', url: 'https://www.wyndhamhotels.com/laquinta/kissimmee-florida/la-quinta-inn-and-suites-kissimmee-lake-buena-vista-south/overview', features: ['Free Breakfast', 'Pet Friendly', 'Pool'] },
+            { name: "Holiday Inn Disney Springs", fullName: "Holiday Inn Disney Springs", cat: 'budget', type: 'Budget', price: 'From $119/night', rating: '4.2', url: 'https://www.ihg.com/holidayinn/hotels/us/en/lake-buena-vista/mcods/hoteldetail', features: ['Near Disney Springs', 'Pool', 'Restaurant'] }
         ];
 
-        document.addEventListener('DOMContentLoaded', () => { loadDeals(); renderHotels(); });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeDayModal(); closeResortModal(); } });
+        document.addEventListener('DOMContentLoaded', () => { 
+            loadDeals(); 
+            renderHotels(); 
+            updateMagicHourCountdown();
+            setInterval(updateMagicHourCountdown, 1000);
+            renderDealLogs();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeDayModal(); closeResortModal(); closeAddDealModal(); } });
+
+        // Magic Hour Countdown (4PM Orlando/EST)
+        function updateMagicHourCountdown() {
+            const now = new Date();
+            const orlando = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+            let target = new Date(orlando);
+            target.setHours(16, 0, 0, 0); // 4PM
+            
+            if (orlando >= target) {
+                target.setDate(target.getDate() + 1);
+            }
+            
+            const diff = target - orlando;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('magic-hour-countdown').textContent = 
+                `${hours.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+        }
+
+        // Secrets Tab Password Protection
+        function showSecretsTab() {
+            showTab('secrets');
+            if (sessionStorage.getItem('secretsUnlocked') === 'true') {
+                document.getElementById('secrets-gate').classList.add('hidden');
+                document.getElementById('secrets-content').classList.remove('hidden');
+            }
+        }
+
+        function unlockSecrets() {
+            const password = document.getElementById('secrets-password').value;
+            if (password === SECRET_PASSWORD) {
+                sessionStorage.setItem('secretsUnlocked', 'true');
+                document.getElementById('secrets-gate').classList.add('hidden');
+                document.getElementById('secrets-content').classList.remove('hidden');
+                document.getElementById('password-error').classList.add('hidden');
+                showToast('🔓 Deal Hunter Pro unlocked!');
+            } else {
+                document.getElementById('password-error').classList.remove('hidden');
+            }
+        }
+
+        // Deal Log functions
+        function addDealLog() {
+            document.getElementById('add-deal-modal').classList.add('active');
+        }
+
+        function closeAddDealModal(e) {
+            if (!e || e.target === e.currentTarget) document.getElementById('add-deal-modal').classList.remove('active');
+        }
+
+        function saveDealLog() {
+            const log = {
+                id: Date.now(),
+                hotel: document.getElementById('log-hotel').value,
+                price: document.getElementById('log-price').value,
+                source: document.getElementById('log-source').value,
+                dates: document.getElementById('log-dates').value,
+                notes: document.getElementById('log-notes').value,
+                timestamp: new Date().toLocaleString()
+            };
+            dealLogs.unshift(log);
+            localStorage.setItem('dealLogs', JSON.stringify(dealLogs));
+            renderDealLogs();
+            closeAddDealModal();
+            showToast('✅ Deal logged!');
+            // Clear form
+            document.getElementById('log-hotel').value = '';
+            document.getElementById('log-price').value = '';
+            document.getElementById('log-dates').value = '';
+            document.getElementById('log-notes').value = '';
+        }
+
+        function deleteDealLog(id) {
+            dealLogs = dealLogs.filter(l => l.id !== id);
+            localStorage.setItem('dealLogs', JSON.stringify(dealLogs));
+            renderDealLogs();
+            showToast('Deleted');
+        }
+
+        function renderDealLogs() {
+            const container = document.getElementById('deal-log-container');
+            if (dealLogs.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center py-8">No deals logged yet. Click "Add Deal" when you find one!</p>';
+                return;
+            }
+            container.innerHTML = dealLogs.map(log => `
+                <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-900">${esc(log.hotel)}</span>
+                            <span class="text-green-600 font-bold">${esc(log.price)}</span>
+                        </div>
+                        <div class="text-sm text-gray-500">${esc(log.source)} • ${esc(log.dates)}</div>
+                        ${log.notes ? `<div class="text-sm text-gray-400 mt-1">${esc(log.notes)}</div>` : ''}
+                        <div class="text-xs text-gray-300 mt-1">${log.timestamp}</div>
+                    </div>
+                    <button onclick="deleteDealLog(${log.id})" class="text-red-400 hover:text-red-600 text-xl">🗑️</button>
+                </div>
+            `).join('');
+        }
 
         async function loadDeals() {
             try {
@@ -337,7 +715,6 @@
 
         function filterDeals(f) { currentFilter=f; filteredDeals = f==='all' ? allDeals : allDeals.filter(d=>d.resorts?.name===f); renderDeals(filteredDeals); renderFilters(); }
 
-        // HOTELS - FIXED COMPARE LINKS
         function filterHotels(cat) {
             currentHotelFilter = cat;
             document.querySelectorAll('.hotel-filter').forEach(b => { b.classList.remove('bg-blue-500','text-white'); b.classList.add('bg-gray-200','text-gray-700'); });
@@ -348,12 +725,7 @@
 
         function renderHotels() {
             const filtered = currentHotelFilter === 'all' ? HOTELS : HOTELS.filter(h => h.cat === currentHotelFilter);
-            document.getElementById('hotels-container').innerHTML = filtered.map(h => {
-                // CORRECT Google Hotels URL format
-                const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(h.fullName + ' Orlando FL hotels')}&tbm=lcl`;
-                const tripAdvisorUrl = `https://www.tripadvisor.com/Search?q=${encodeURIComponent(h.fullName)}`;
-                
-                return `
+            document.getElementById('hotels-container').innerHTML = filtered.map(h => `
                 <div class="hotel-card bg-white border rounded-xl p-5 transition">
                     <div class="flex flex-col md:flex-row gap-4">
                         <div class="flex-1">
@@ -361,7 +733,6 @@
                                 <h3 class="font-bold text-lg text-gray-900">${h.name}</h3>
                                 <span class="text-xs px-2 py-0.5 rounded ${h.cat==='disney'?'bg-blue-100 text-blue-700':h.cat==='partner'?'bg-purple-100 text-purple-700':'bg-gray-100 text-gray-600'}">${h.type}</span>
                             </div>
-                            <p class="text-gray-500 text-sm mb-2">${h.fullName}</p>
                             <div class="flex items-center gap-3 text-sm mb-3">
                                 <span class="text-yellow-500">★ ${h.rating}</span>
                                 <span class="text-green-600 font-semibold">${h.price}</span>
@@ -370,23 +741,16 @@
                                 ${h.features.map(f => `<span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">${f}</span>`).join('')}
                             </div>
                         </div>
-                        <div class="flex flex-col gap-2 md:w-52">
-                            <a href="${h.url}" target="_blank" rel="noopener" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-medium text-center transition">
+                        <div class="flex flex-col gap-2 md:w-48">
+                            <a href="${h.url}" target="_blank" rel="noopener" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-center transition text-sm">
                                 Check Availability →
-                            </a>
-                            <a href="${googleUrl}" target="_blank" rel="noopener" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm text-center transition">
-                                🔍 Search Google
-                            </a>
-                            <a href="${tripAdvisorUrl}" target="_blank" rel="noopener" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm text-center transition">
-                                📖 TripAdvisor Reviews
                             </a>
                         </div>
                     </div>
                 </div>
-            `}).join('');
+            `).join('');
         }
 
-        // Calendar
         function renderCalendar() {
             const y = miniCalendarMonth.getFullYear(), m = miniCalendarMonth.getMonth();
             document.getElementById('calendar-month').textContent = miniCalendarMonth.toLocaleDateString('en-US',{month:'short',year:'numeric'});
@@ -413,9 +777,15 @@
         function changeMonth(d) { currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+d, 1); renderFullCalendar(); }
         function goToTodayFull() { currentMonth = new Date(); renderFullCalendar(); }
 
-        function showTab(t) { document.querySelectorAll('.tab-content').forEach(x=>x.classList.add('hidden')); document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active')); document.getElementById(t+'-tab').classList.remove('hidden'); document.querySelector(`[data-tab="${t}"]`).classList.add('active'); if(t==='calendar')renderFullCalendar(); }
+        function showTab(t) { 
+            document.querySelectorAll('.tab-content').forEach(x=>x.classList.add('hidden')); 
+            document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active')); 
+            document.getElementById(t+'-tab').classList.remove('hidden'); 
+            const btn = document.querySelector(`[data-tab="${t}"]`);
+            if(btn) btn.classList.add('active'); 
+            if(t==='calendar')renderFullCalendar(); 
+        }
 
-        // Modals
         function showDealModal(i) { const d=allDeals[i]; if(!d)return; document.getElementById('modal-title').textContent=d.title; document.getElementById('modal-description').textContent=d.description||''; document.getElementById('modal-resort').textContent=d.resorts?.name||'Disney Resort'; document.getElementById('modal-dates').textContent=`${fmtDate(d.valid_from)} - ${fmtDate(d.valid_to)}`; document.getElementById('modal-link').href=d.source_url||'https://disneyworld.disney.go.com/special-offers/'; const b=document.getElementById('modal-badge'); b.textContent=d.discount_percentage?`${d.discount_percentage}% OFF`:'Special'; b.className=`inline-block px-4 py-1 rounded-full text-sm font-bold ${d.discount_percentage?'bg-green-100 text-green-800':'bg-blue-100 text-blue-800'}`; document.getElementById('deal-modal').classList.add('active'); }
         function closeModal(e) { if(!e||e.target===e.currentTarget)document.getElementById('deal-modal').classList.remove('active'); }
         function showDayDeals(d,y,m) { const dt=new Date(y,m,d); const dayDeals=allDeals.filter(x=>{const s=new Date(x.valid_from),e=new Date(x.valid_to);return dt>=s&&dt<=e;}); document.getElementById('day-modal-title').textContent=`${dt.toLocaleDateString('en-US',{month:'long',day:'numeric'})}`; document.getElementById('day-modal-deals').innerHTML=dayDeals.map(x=>`<div class="p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100" onclick="closeDayModal();showDealModal(${allDeals.indexOf(x)});"><div class="flex justify-between"><div><h4 class="font-semibold">${esc(x.title)}</h4></div>${x.discount_percentage?`<span class="bg-green-500 text-white px-2 py-1 rounded text-sm">${x.discount_percentage}%</span>`:''}</div></div>`).join(''); document.getElementById('day-modal').classList.add('active'); }
