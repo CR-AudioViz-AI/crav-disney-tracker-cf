@@ -6,7 +6,7 @@
     <title>Disney Deal Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .deal-card:hover { transform: translateY(-2px); }
+        .deal-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .calendar-day.has-deals { background-color: #dcfce7; cursor: pointer; }
         .modal { display: none; }
         .modal.active { display: flex; }
@@ -120,7 +120,7 @@
 
     <script>
         const SUPABASE_URL = 'https://kteobfyferrukqeolofj.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0ZW9iZnlmZXJydWtxZW9sb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk2MjMxMDcsImV4cCI6MjA0NTE5OTEwN30.xK0YOdLjSLMnH-p91Q-WkSIDN_fZnHgwU46T9_l2lM8';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0ZW9iZnlmZXJydWtxZW9sb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxOTcyNjYsImV4cCI6MjA3NzU1NzI2Nn0.uy-jlF_z6qVb8qogsNyGDLHqT4HhmdRhLrW7zPv3qhY';
         
         let allDeals = [];
         let currentFilter = 'all';
@@ -132,7 +132,6 @@
 
         async function loadDeals() {
             try {
-                // Query Supabase REST API directly
                 const response = await fetch(
                     `${SUPABASE_URL}/rest/v1/deals?select=*,resorts(name,resort_type)&is_active=eq.true&order=discount_percentage.desc.nullslast`,
                     {
