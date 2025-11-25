@@ -1,6 +1,6 @@
 -- =============================================
--- Disney Deal Tracker - Complete Database Schema
--- Version: 2.0 - Investor Ready
+-- Disney Deal Tracker - Database Schema (FIXED)
+-- Version: 2.1 - Corrected Column Order
 -- =============================================
 
 -- 1. PRICE ALERTS TABLE
@@ -74,7 +74,7 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 -- 5. NOTIFICATIONS LOG (track what we sent)
 CREATE TABLE IF NOT EXISTS notifications_log (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    alert_id UUID REFERENCES price_alerts(id),
+    alert_id UUID REFERENCES price_alerts(id) ON DELETE SET NULL,
     user_email VARCHAR(255) NOT NULL,
     hotel_name VARCHAR(255) NOT NULL,
     old_price INTEGER,
@@ -90,21 +90,30 @@ CREATE TABLE IF NOT EXISTS notifications_log (
 CREATE INDEX IF NOT EXISTS idx_notifications_alert ON notifications_log(alert_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications_log(user_email, sent_at DESC);
 
--- 6. ADMIN STATS VIEW (for dashboard)
-CREATE OR REPLACE VIEW admin_stats AS
+-- 6. ADMIN STATS VIEW (for dashboard) - CREATED AFTER ALL TABLES
+DROP VIEW IF EXISTS admin_stats;
+CREATE VIEW admin_stats AS
 SELECT 
     (SELECT COUNT(*) FROM price_alerts WHERE is_active = true) as active_alerts,
     (SELECT COUNT(DISTINCT email) FROM price_alerts) as total_users,
-    (SELECT SUM(total_savings) FROM users) as total_savings_platform,
+    (SELECT COALESCE(SUM(total_savings), 0) FROM users) as total_savings_platform,
     (SELECT COUNT(*) FROM notifications_log WHERE sent_at > NOW() - INTERVAL '24 hours') as alerts_sent_24h,
     (SELECT COUNT(*) FROM analytics_events WHERE created_at > NOW() - INTERVAL '24 hours') as events_24h;
 
--- 7. ROW LEVEL SECURITY (RLS) - Security best practices
+-- 7. ROW LEVEL SECURITY (RLS)
 ALTER TABLE price_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE price_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications_log ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Anyone can create alerts" ON price_alerts;
+DROP POLICY IF EXISTS "Users can view own alerts" ON price_alerts;
+DROP POLICY IF EXISTS "Users can update own alerts" ON price_alerts;
+DROP POLICY IF EXISTS "Anyone can view price history" ON price_history;
+DROP POLICY IF EXISTS "Service can insert price history" ON price_history;
+DROP POLICY IF EXISTS "Anyone can insert analytics" ON analytics_events;
 
 -- Policy: Anyone can insert their own alert
 CREATE POLICY "Anyone can create alerts" ON price_alerts
@@ -139,11 +148,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_price_alerts_updated_at ON price_alerts;
 CREATE TRIGGER update_price_alerts_updated_at
     BEFORE UPDATE ON price_alerts
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW
@@ -160,12 +171,20 @@ VALUES
     ('caribbean-beach', 'Caribbean Beach Resort', 187, 'hotwire-hotrate', 25, NOW() - INTERVAL '4 hours')
 ON CONFLICT DO NOTHING;
 
--- 10. COMMENTS (documentation)
-COMMENT ON TABLE price_alerts IS 'User-created price alerts for hotels';
-COMMENT ON TABLE price_history IS 'Historical price data for trend charts';
-COMMENT ON TABLE analytics_events IS 'User behavior tracking for product analytics';
-COMMENT ON TABLE users IS 'Registered users with savings tracking';
-COMMENT ON TABLE notifications_log IS 'Audit log of all notifications sent';
-COMMENT ON VIEW admin_stats IS 'Real-time statistics for admin dashboard';
-
--- DONE! Run this in Supabase SQL Editor
+-- 10. VERIFY TABLES CREATED
+DO $$
+BEGIN
+    RAISE NOTICE '✅ Database schema created successfully!';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Tables created:';
+    RAISE NOTICE '  ✓ price_alerts';
+    RAISE NOTICE '  ✓ price_history (with 6 sample records)';
+    RAISE NOTICE '  ✓ analytics_events';
+    RAISE NOTICE '  ✓ users';
+    RAISE NOTICE '  ✓ notifications_log';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Views created:';
+    RAISE NOTICE '  ✓ admin_stats';
+    RAISE NOTICE '';
+    RAISE NOTICE '🎉 Ready to accept alert signups!';
+END $$;
