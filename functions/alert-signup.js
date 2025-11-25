@@ -1,25 +1,28 @@
 // =============================================
-// Alert Signup Function - Cloudflare Pages
-// Handles email/SMS alert registration
+// Alert Signup Function - WITH ADMIN SUPPORT
+// Handles Roy & Cindy as unlimited free admins
 // =============================================
 
 export async function onRequest(context) {
   const SUPABASE_URL = 'https://kteobfyferrukqeolofj.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0ZW9iZnlmZXJydWtxZW9sb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxOTcyNjYsImV4cCI6MjA3NzU1NzI2Nn0.uy-jlF_z6qVb8qogsNyGDLHqT4HhmdRhLrW7zPv3qhY';
 
-  // CORS headers
+  // Admin whitelist - unlimited free access
+  const ADMIN_EMAILS = [
+    'royhenderson@craudiovizai.com',
+    'cindyhenderson@craudiovizai.com'
+  ];
+
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  // Handle preflight
   if (context.request.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Only allow POST
   if (context.request.method !== 'POST') {
     return new Response(JSON.stringify({ 
       success: false, 
@@ -31,11 +34,9 @@ export async function onRequest(context) {
   }
 
   try {
-    // Parse request body
     const body = await context.request.json();
     const { email, hotel_id, hotel_name, target_price, is_passholder, phone_number } = body;
 
-    // Validation
     if (!email || !hotel_id) {
       return new Response(JSON.stringify({ 
         success: false, 
@@ -46,7 +47,6 @@ export async function onRequest(context) {
       });
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return new Response(JSON.stringify({ 
@@ -58,9 +58,12 @@ export async function onRequest(context) {
       });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+    const isAdmin = ADMIN_EMAILS.includes(normalizedEmail);
+
     // Check if alert already exists
     const checkResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/price_alerts?email=eq.${encodeURIComponent(email)}&hotel_id=eq.${hotel_id}&is_active=eq.true`,
+      `${SUPABASE_URL}/rest/v1/price_alerts?email=eq.${encodeURIComponent(normalizedEmail)}&hotel_id=eq.${hotel_id}&is_active=eq.true`,
       {
         headers: {
           'apikey': SUPABASE_ANON_KEY,
@@ -75,8 +78,9 @@ export async function onRequest(context) {
     if (existingAlerts && existingAlerts.length > 0) {
       return new Response(JSON.stringify({ 
         success: true,
-        message: 'You already have an alert for this hotel',
-        alert_id: existingAlerts[0].id
+        message: isAdmin ? 'Admin alert already active' : 'You already have an alert for this hotel',
+        alert_id: existingAlerts[0].id,
+        is_admin: isAdmin
       }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -85,7 +89,7 @@ export async function onRequest(context) {
 
     // Create new alert
     const alertData = {
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       hotel_id,
       hotel_name: hotel_name || getHotelName(hotel_id),
       target_price: target_price || null,
@@ -116,25 +120,25 @@ export async function onRequest(context) {
 
     const newAlert = await insertResponse.json();
 
-    // Create or update user record
-    await upsertUser(email, is_passholder, SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Create or update user record with admin flag
+    await upsertUser(normalizedEmail, is_passholder, isAdmin, SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Track analytics event
     await trackEvent({
       event_type: 'alert_created',
-      event_data: { hotel_id, is_passholder },
-      user_id: email,
+      event_data: { hotel_id, is_passholder, is_admin: isAdmin },
+      user_id: normalizedEmail,
       page_url: context.request.url
     }, SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // TODO: Send welcome email via Resend or SendGrid
-    // await sendWelcomeEmail(email, hotel_name);
-
     return new Response(JSON.stringify({ 
       success: true,
-      message: 'Alert created successfully! We\'ll notify you when prices drop.',
+      message: isAdmin 
+        ? 'Admin alert created! You have unlimited free access.' 
+        : 'Alert created successfully! We\'ll notify you when prices drop.',
       alert_id: newAlert[0].id,
-      hotel_name: alertData.hotel_name
+      hotel_name: alertData.hotel_name,
+      is_admin: isAdmin
     }), {
       status: 201,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -154,7 +158,6 @@ export async function onRequest(context) {
   }
 }
 
-// Helper: Get hotel name from ID
 function getHotelName(hotelId) {
   const hotelNames = {
     'grand-floridian': 'Grand Floridian Resort & Spa',
@@ -179,8 +182,7 @@ function getHotelName(hotelId) {
   return hotelNames[hotelId] || 'Disney Resort';
 }
 
-// Helper: Upsert user
-async function upsertUser(email, isPassholder, supabaseUrl, apiKey) {
+async function upsertUser(email, isPassholder, isAdmin, supabaseUrl, apiKey) {
   try {
     await fetch(`${supabaseUrl}/rest/v1/users`, {
       method: 'POST',
@@ -191,8 +193,9 @@ async function upsertUser(email, isPassholder, supabaseUrl, apiKey) {
         'Prefer': 'resolution=merge-duplicates'
       },
       body: JSON.stringify({
-        email: email.toLowerCase().trim(),
+        email: email,
         is_passholder: isPassholder,
+        is_admin: isAdmin,
         last_login_at: new Date().toISOString()
       })
     });
@@ -201,7 +204,6 @@ async function upsertUser(email, isPassholder, supabaseUrl, apiKey) {
   }
 }
 
-// Helper: Track analytics event
 async function trackEvent(eventData, supabaseUrl, apiKey) {
   try {
     await fetch(`${supabaseUrl}/rest/v1/analytics_events`, {
