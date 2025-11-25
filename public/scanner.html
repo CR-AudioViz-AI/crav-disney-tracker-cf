@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Disney Deal Scanner - Find Secret Hotel Deals</title>
+    <title>Disney Deal Scanner - Passholder & Regular Deals</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
     <style>
         .scanner-gradient { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #4c1d95 100%); }
+        .passholder-gradient { background: linear-gradient(135deg, #065f46 0%, #047857 50%, #10b981 100%); }
         .glow { box-shadow: 0 0 30px rgba(168,85,247,0.4); }
         .glow-green { box-shadow: 0 0 20px rgba(34,197,94,0.5); }
+        .glow-gold { box-shadow: 0 0 20px rgba(234,179,8,0.5); }
         .pulse { animation: pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
         .hotel-row:hover { background: linear-gradient(90deg, #f0fdf4 0%, #ecfdf5 100%); transform: translateX(4px); }
@@ -22,11 +24,13 @@
         .type-chip.selected { background: #059669; color: white; border-color: #059669; }
         @keyframes slideIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         .animate-in { animation: slideIn 0.3s ease-out; }
+        .passholder-toggle { transition: all 0.3s; }
+        .passholder-badge { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <!-- Header -->
-    <header class="scanner-gradient text-white shadow-2xl">
+    <header id="main-header" class="scanner-gradient text-white shadow-2xl">
         <div class="max-w-7xl mx-auto px-4 py-6">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
@@ -34,11 +38,19 @@
                         <span class="text-4xl">🔍</span>
                         <div>
                             <h1 class="text-3xl font-bold">Disney Deal Scanner</h1>
-                            <p class="text-purple-200">Find secret hotel deals before anyone else</p>
+                            <p id="header-subtitle" class="text-purple-200">Find secret hotel deals before anyone else</p>
                         </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
+                    <!-- PASSHOLDER TOGGLE -->
+                    <button onclick="togglePassholderMode()" id="passholder-toggle" class="passholder-toggle flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg border-2 border-white/30">
+                        <span class="text-xl">🎟️</span>
+                        <span id="passholder-label" class="font-medium">Passholder Mode</span>
+                        <div id="passholder-indicator" class="w-12 h-6 bg-gray-600 rounded-full relative transition-all">
+                            <div id="passholder-dot" class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-all"></div>
+                        </div>
+                    </button>
                     <div class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-lg">
                         <div class="live-dot"></div>
                         <span class="text-sm">Live Pricing</span>
@@ -51,6 +63,25 @@
             </div>
         </div>
     </header>
+
+    <!-- PASSHOLDER INFO BANNER (hidden by default) -->
+    <div id="passholder-banner" class="hidden bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-gray-900 py-4">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">🎟️</span>
+                    <div>
+                        <h2 class="font-bold text-lg">Annual Passholder Mode Active</h2>
+                        <p class="text-sm text-gray-700">Showing room-only deals • No ticket packages • Up to 35% AP discounts</p>
+                    </div>
+                </div>
+                <a href="https://disneyworld.disney.go.com/passholder-program/experiences-perks-offers/" target="_blank" 
+                   class="bg-gray-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-800 transition">
+                    View Official AP Deals →
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Scanner Interface -->
     <main class="max-w-7xl mx-auto px-4 py-6">
@@ -85,7 +116,7 @@
                     </select>
                 </div>
             </div>
-            <div class="mt-4 flex items-center gap-2 text-sm text-gray-500">
+            <div id="date-tip" class="mt-4 flex items-center gap-2 text-sm text-gray-500">
                 <span>💡</span>
                 <span>Tip: Check 15 days before arrival for best deals. Book on Tuesdays for 16% savings!</span>
             </div>
@@ -124,13 +155,13 @@
         </div>
 
         <!-- SCAN BUTTONS -->
-        <div class="bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 rounded-2xl shadow-xl p-6 mb-6 text-white">
+        <div id="scan-section" class="bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 rounded-2xl shadow-xl p-6 mb-6 text-white">
             <div class="flex items-center gap-2 mb-4">
                 <span class="text-2xl pulse">🚀</span>
                 <h2 class="text-xl font-bold">Step 3: Scan for Deals</h2>
                 <span class="bg-white/20 px-3 py-1 rounded-full text-sm ml-auto">Opens in new tabs</span>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div id="scan-buttons" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <button onclick="scanRoomRevealer()" class="scanner-btn bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">
                     <span class="text-2xl">🔮</span>
                     <div class="text-left">
@@ -160,8 +191,99 @@
                     </div>
                 </button>
             </div>
-            <div class="mt-4 bg-white/10 rounded-lg p-3 text-sm">
+            <!-- Passholder-specific buttons (hidden by default) -->
+            <div id="ap-scan-buttons" class="hidden mt-4 pt-4 border-t border-white/20">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-xl">🎟️</span>
+                    <span class="font-bold">Annual Passholder Direct Booking</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a href="https://disneyworld.disney.go.com/passholder-program/experiences-perks-offers/" target="_blank"
+                       class="scanner-btn bg-gradient-to-r from-yellow-400 to-amber-500 text-gray-900 px-6 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 glow-gold">
+                        <span class="text-2xl">🎟️</span>
+                        <div class="text-left">
+                            <div>Disney AP Discounts</div>
+                            <div class="text-xs font-normal opacity-80">Up to 35% off room-only!</div>
+                        </div>
+                    </a>
+                    <a href="https://disneyworld.disney.go.com/resorts/" target="_blank"
+                       class="scanner-btn bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">
+                        <span class="text-2xl">🏰</span>
+                        <div class="text-left">
+                            <div>Book Disney Direct</div>
+                            <div class="text-xs font-normal opacity-80">Room-only rates (call for AP)</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div id="scan-tip" class="mt-4 bg-white/10 rounded-lg p-3 text-sm">
                 <strong>🎯 Pro Tip:</strong> After scanning, look for hotels matching the identifiers below. Use RoomRevealer to see which mystery hotel is which!
+            </div>
+        </div>
+
+        <!-- PASSHOLDER DISCOUNT TABLE (hidden by default) -->
+        <div id="ap-discounts-section" class="hidden bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-2xl p-6 mb-6">
+            <h3 class="text-xl font-bold text-yellow-800 mb-4 flex items-center gap-2">
+                <span class="text-2xl">🎟️</span> Current Annual Passholder Room-Only Discounts
+            </h3>
+            <div class="text-sm text-yellow-700 mb-4">
+                <strong>Valid Dates:</strong> Most Sunday-Thursday Oct 12 - Nov 20, 2025 & Nov 23 - Dec 25, 2025 | <strong>Early 2026:</strong> Jan 4 - Apr 30, 2026
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- 30-35% Tier -->
+                <div class="bg-white rounded-xl p-4 shadow-sm border-2 border-green-200">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-2xl">👑</span>
+                        <span class="text-2xl font-bold text-green-600">30-35% OFF</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-2">Deluxe Resorts</p>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>• Grand Floridian</li>
+                        <li>• Polynesian Village</li>
+                        <li>• Contemporary</li>
+                        <li>• Beach Club</li>
+                        <li>• Yacht Club</li>
+                        <li>• BoardWalk Inn</li>
+                        <li>• Wilderness Lodge</li>
+                        <li>• Animal Kingdom Lodge</li>
+                        <li>• Riviera</li>
+                    </ul>
+                </div>
+                <!-- 25-30% Tier -->
+                <div class="bg-white rounded-xl p-4 shadow-sm border-2 border-blue-200">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-2xl">⭐</span>
+                        <span class="text-2xl font-bold text-blue-600">25-30% OFF</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-2">Moderate Resorts + Some DVC</p>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>• Coronado Springs</li>
+                        <li>• Caribbean Beach</li>
+                        <li>• Port Orleans Riverside</li>
+                        <li>• Port Orleans French Qtr</li>
+                        <li>• Boulder Ridge Villas</li>
+                        <li>• Copper Creek Villas</li>
+                    </ul>
+                </div>
+                <!-- 20-25% Tier -->
+                <div class="bg-white rounded-xl p-4 shadow-sm border-2 border-purple-200">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-2xl">💰</span>
+                        <span class="text-2xl font-bold text-purple-600">20-25% OFF</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-2">Value Resorts</p>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>• Pop Century</li>
+                        <li>• Art of Animation</li>
+                        <li>• All-Star Movies</li>
+                        <li>• All-Star Music</li>
+                        <li>• All-Star Sports</li>
+                        <li>• Fort Wilderness Cabins</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-4 bg-yellow-100 rounded-lg p-3 text-sm text-yellow-800">
+                <strong>⚠️ Important:</strong> AP discount is room-only. Call Disney at <strong>407-939-7675</strong> or book online and mention your AP at check-in. Cannot combine with other offers. Must show valid AP.
             </div>
         </div>
 
@@ -173,7 +295,7 @@
                         <span class="text-2xl">🏨</span>
                         <div>
                             <h2 class="text-xl font-bold">Hotel Identification Guide</h2>
-                            <p class="text-gray-300 text-sm">Match mystery hotels to real hotels using these clues</p>
+                            <p id="hotel-subtitle" class="text-gray-300 text-sm">Match mystery hotels to real hotels using these clues</p>
                         </div>
                     </div>
                     <div class="text-right">
@@ -188,7 +310,7 @@
                 <div class="col-span-3">Hotel</div>
                 <div class="col-span-2">Priceline ID</div>
                 <div class="col-span-2">Location</div>
-                <div class="col-span-2">Key Clues</div>
+                <div id="discount-header" class="col-span-2">Key Clues</div>
                 <div class="col-span-1">Price</div>
                 <div class="col-span-2 text-right">Action</div>
             </div>
@@ -200,7 +322,7 @@
         </div>
 
         <!-- Quick Identification Tips -->
-        <div class="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-2xl p-6 mb-6">
+        <div id="id-tips" class="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-2xl p-6 mb-6">
             <h3 class="text-lg font-bold text-yellow-800 mb-4 flex items-center gap-2">
                 <span class="text-2xl">💡</span> Quick Identification Cheat Sheet
             </h3>
@@ -291,6 +413,7 @@
                                 <option>Priceline Express</option>
                                 <option>Hotwire Hot Rate</option>
                                 <option>RoomRevealer</option>
+                                <option>Disney AP Discount</option>
                                 <option>Disney Direct</option>
                                 <option>Other</option>
                             </select>
@@ -328,160 +451,194 @@
         // ===== CONFIGURATION =====
         let selectedArea = 'all';
         let selectedType = 'all';
+        let passholderMode = false;
         let dealLog = JSON.parse(localStorage.getItem('scannerDealLog') || '[]');
+
+        // Check saved passholder preference
+        if (localStorage.getItem('passholderMode') === 'true') {
+            passholderMode = true;
+        }
 
         // ===== HOTEL DATABASE WITH FULL IDENTIFICATION INFO =====
         const HOTELS = [
             // DISNEY DELUXE - 4 Star on Priceline, Bonnet Creek, NO resort fee
             { id: 'grand-floridian', name: "Grand Floridian Resort & Spa", icon: '👑', 
-              area: 'bonnet-creek', type: 'deluxe', price: '$649+',
+              area: 'bonnet-creek', type: 'deluxe', price: '$649+', apDiscount: '30-35%',
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: false },
               clues: ['Monorail', 'Walk to MK', 'Spa'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/grand-floridian-resort-and-spa/' },
             { id: 'polynesian', name: "Polynesian Village Resort", icon: '🌺',
-              area: 'bonnet-creek', type: 'deluxe', price: '$599+',
+              area: 'bonnet-creek', type: 'deluxe', price: '$599+', apDiscount: '30-35%',
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: false },
               clues: ['Monorail', 'Beach', 'Fireworks view'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/polynesian-resort/' },
             { id: 'contemporary', name: "Contemporary Resort", icon: '🏢',
-              area: 'bonnet-creek', type: 'deluxe', price: '$499+',
+              area: 'bonnet-creek', type: 'deluxe', price: '$499+', apDiscount: '30-35%',
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: false },
               clues: ['Monorail', 'Walk to MK', 'California Grill'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/contemporary-resort/' },
             { id: 'wilderness-lodge', name: "Wilderness Lodge", icon: '🌲',
-              area: 'bonnet-creek', type: 'deluxe', price: '$399+',
+              area: 'bonnet-creek', type: 'deluxe', price: '$399+', apDiscount: '30-35%',
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: false, hint: '"Lodge" in name' },
               clues: ['Boat to MK', 'Geyser', 'Lodge theme'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/wilderness-lodge-resort/' },
             { id: 'animal-kingdom-lodge', name: "Animal Kingdom Lodge", icon: '🦁',
-              area: 'bonnet-creek', type: 'deluxe', price: '$399+',
+              area: 'bonnet-creek', type: 'deluxe', price: '$399+', apDiscount: '30-35%',
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: false, hint: '"Lodge" in name' },
               clues: ['Savanna views', 'Animals', 'African dining'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/animal-kingdom-lodge/' },
             { id: 'beach-club', name: "Beach Club Resort", icon: '🏖️',
-              area: 'bonnet-creek', type: 'deluxe', price: '$549+',
+              area: 'bonnet-creek', type: 'deluxe', price: '$549+', apDiscount: '30-35%',
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: false },
               clues: ['Walk to Epcot', 'Stormalong Bay', 'Beach theme'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/beach-club-resort/' },
             { id: 'yacht-club', name: "Yacht Club Resort", icon: '⛵',
-              area: 'bonnet-creek', type: 'deluxe', price: '$549+',
+              area: 'bonnet-creek', type: 'deluxe', price: '$549+', apDiscount: '30-35%',
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: false },
               clues: ['Walk to Epcot', 'Stormalong Bay', 'Nautical theme'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/yacht-club-resort/' },
             { id: 'boardwalk', name: "BoardWalk Inn", icon: '🎡',
-              area: 'bonnet-creek', type: 'deluxe', price: '$499+',
+              area: 'bonnet-creek', type: 'deluxe', price: '$499+', apDiscount: '30-35%',
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: false },
               clues: ['Walk to Epcot', 'Walk to HS', 'Entertainment'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/boardwalk-inn/' },
             { id: 'riviera', name: "Riviera Resort", icon: '🏛️',
-              area: 'bonnet-creek', type: 'deluxe', price: '$449+',
+              area: 'bonnet-creek', type: 'deluxe', price: '$449+', apDiscount: '30-35%',
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: false },
               clues: ['Skyliner hub', 'European style', 'Rooftop dining'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/riviera-resort/' },
               
             // DISNEY MODERATE - 3.5 Star on Priceline, Bonnet Creek, NO resort fee
             { id: 'caribbean-beach', name: "Caribbean Beach Resort", icon: '🏝️',
-              area: 'bonnet-creek', type: 'moderate', price: '$249+',
+              area: 'bonnet-creek', type: 'moderate', price: '$249+', apDiscount: '25-30%',
               priceline: { stars: 3.5, location: 'Bonnet Creek', resortFee: false },
               clues: ['Skyliner access', 'Beach', 'Island theme'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/caribbean-beach-resort/' },
             { id: 'coronado', name: "Coronado Springs Resort", icon: '🌵',
-              area: 'bonnet-creek', type: 'moderate', price: '$259+',
+              area: 'bonnet-creek', type: 'moderate', price: '$259+', apDiscount: '25-30%',
               priceline: { stars: 3.5, location: 'Bonnet Creek', resortFee: false },
               clues: ['Gran Destino Tower', 'Convention ctr', 'Southwest theme'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/coronado-springs-resort/' },
             { id: 'port-orleans-riverside', name: "Port Orleans Riverside", icon: '🚣',
-              area: 'bonnet-creek', type: 'moderate', price: '$269+',
+              area: 'bonnet-creek', type: 'moderate', price: '$269+', apDiscount: '25-30%',
               priceline: { stars: 3.5, location: 'Bonnet Creek', resortFee: false },
               clues: ['Boat to DS', 'Southern theme', 'Quiet'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/port-orleans-resort-riverside/' },
             { id: 'port-orleans-french', name: "Port Orleans French Quarter", icon: '⚜️',
-              area: 'bonnet-creek', type: 'moderate', price: '$269+',
+              area: 'bonnet-creek', type: 'moderate', price: '$269+', apDiscount: '25-30%',
               priceline: { stars: 3.5, location: 'Bonnet Creek', resortFee: false },
               clues: ['Boat to DS', 'NOLA theme', 'Beignets'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/port-orleans-resort-french-quarter/' },
               
             // DISNEY VALUE - 3 Star on Priceline, Bonnet Creek, NO resort fee  
             { id: 'pop-century', name: "Pop Century Resort", icon: '📼',
-              area: 'bonnet-creek', type: 'value', price: '$169+',
+              area: 'bonnet-creek', type: 'value', price: '$169+', apDiscount: '20-25%',
               priceline: { stars: 3, location: 'Bonnet Creek', resortFee: false },
               clues: ['Skyliner access', 'Pop culture', 'Giant icons'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/pop-century-resort/' },
             { id: 'art-of-animation', name: "Art of Animation Resort", icon: '🎨',
-              area: 'bonnet-creek', type: 'value', price: '$189+',
+              area: 'bonnet-creek', type: 'value', price: '$189+', apDiscount: '20-25%',
               priceline: { stars: 3, location: 'Bonnet Creek', resortFee: false },
               clues: ['Skyliner access', 'Family suites', 'Animation theme'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/art-of-animation-resort/' },
             { id: 'all-star-movies', name: "All-Star Movies Resort", icon: '🎬',
-              area: 'bonnet-creek', type: 'value', price: '$149+',
+              area: 'bonnet-creek', type: 'value', price: '$149+', apDiscount: '20-25%',
               priceline: { stars: 3, location: 'Bonnet Creek', resortFee: false },
               clues: ['Bus only', 'Movie themes', 'Giant Buzz/Woody'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/all-star-movies-resort/' },
             { id: 'all-star-music', name: "All-Star Music Resort", icon: '🎵',
-              area: 'bonnet-creek', type: 'value', price: '$149+',
+              area: 'bonnet-creek', type: 'value', price: '$149+', apDiscount: '20-25%',
               priceline: { stars: 3, location: 'Bonnet Creek', resortFee: false },
               clues: ['Bus only', 'Music themes', 'Family suites available'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/all-star-music-resort/' },
             { id: 'all-star-sports', name: "All-Star Sports Resort", icon: '⚽',
-              area: 'bonnet-creek', type: 'value', price: '$139+',
+              area: 'bonnet-creek', type: 'value', price: '$139+', apDiscount: '20-25%',
               priceline: { stars: 3, location: 'Bonnet Creek', resortFee: false },
               clues: ['Bus only', 'Sports themes', 'Cheapest Disney'],
+              roomOnly: true,
               bookUrl: 'https://disneyworld.disney.go.com/resorts/all-star-sports-resort/' },
               
             // PARTNER HOTELS - Various stars, Disney Springs area, HAS resort fee
             { id: 'swan', name: "Walt Disney World Swan", icon: '🦢',
-              area: 'bonnet-creek', type: 'partner', price: '$299+',
+              area: 'bonnet-creek', type: 'partner', price: '$299+', apDiscount: null,
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: true, feeAmount: '$35' },
               clues: ['Walk to Epcot', 'Walk to HS', 'Marriott'],
+              roomOnly: true,
               bookUrl: 'https://www.marriott.com/en-us/hotels/mcowh-walt-disney-world-swan/overview/' },
             { id: 'dolphin', name: "Walt Disney World Dolphin", icon: '🐬',
-              area: 'bonnet-creek', type: 'partner', price: '$289+',
+              area: 'bonnet-creek', type: 'partner', price: '$289+', apDiscount: null,
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: true, feeAmount: '$35' },
               clues: ['Walk to Epcot', 'Walk to HS', 'Sheraton'],
+              roomOnly: true,
               bookUrl: 'https://www.marriott.com/en-us/hotels/mcodo-walt-disney-world-dolphin/overview/' },
             { id: 'hilton-lbv', name: "Hilton Orlando Buena Vista Palace", icon: '🏨',
-              area: 'disney-springs', type: 'partner', price: '$189+',
+              area: 'disney-springs', type: 'partner', price: '$189+', apDiscount: null,
               priceline: { stars: 4, location: 'Disney Springs', resortFee: true },
               clues: ['Walk to DS', 'Spa', 'Multiple restaurants'],
+              roomOnly: true,
               bookUrl: 'https://www.hilton.com/en/hotels/mcoobhh-hilton-orlando-buena-vista-palace/' },
             { id: 'hilton-bonnet', name: "Hilton Orlando Bonnet Creek", icon: '🌟',
-              area: 'bonnet-creek', type: 'partner', price: '$249+',
+              area: 'bonnet-creek', type: 'partner', price: '$249+', apDiscount: null,
               priceline: { stars: 4, location: 'Bonnet Creek', resortFee: true },
               clues: ['Lazy river', 'Golf course', 'Walk to Waldorf'],
+              roomOnly: true,
               bookUrl: 'https://www.hilton.com/en/hotels/mcobchh-hilton-orlando-bonnet-creek/' },
             { id: 'doubletree-ds', name: "DoubleTree Suites Disney Springs", icon: '🍪',
-              area: 'disney-springs', type: 'partner', price: '$179+',
+              area: 'disney-springs', type: 'partner', price: '$179+', apDiscount: null,
               priceline: { stars: 3.5, location: 'Disney Springs', resortFee: true },
               clues: ['All suites', 'Free cookies', 'Walk to DS'],
+              roomOnly: true,
               bookUrl: 'https://www.hilton.com/en/hotels/mcoordt-doubletree-suites-by-hilton-orlando-disney-springs-area/' },
             { id: 'drury-plaza', name: "Drury Plaza Hotel Disney Springs", icon: '🌟',
-              area: 'disney-springs', type: 'partner', price: '$159+',
+              area: 'disney-springs', type: 'partner', price: '$159+', apDiscount: null,
               priceline: { stars: 3.5, location: 'Disney Springs', resortFee: false },
               clues: ['Free breakfast', 'Free kickback', 'Great value'],
+              roomOnly: true,
               bookUrl: 'https://www.druryhotels.com/locations/orlando-fl/drury-plaza-hotel-orlando-disney-springs-area' },
             { id: 'b-resort', name: "B Resort & Spa Disney Springs", icon: '💆',
-              area: 'disney-springs', type: 'partner', price: '$149+',
+              area: 'disney-springs', type: 'partner', price: '$149+', apDiscount: null,
               priceline: { stars: 4, location: 'Disney Springs', resortFee: true },
               clues: ['Walk to DS', 'Spa', 'Zero-entry pool'],
+              roomOnly: true,
               bookUrl: 'https://www.bhotelsandresorts.com/b-resort-and-spa/' },
             { id: 'wyndham-ds', name: "Wyndham Garden Disney Springs", icon: '🌳',
-              area: 'disney-springs', type: 'partner', price: '$129+',
+              area: 'disney-springs', type: 'partner', price: '$129+', apDiscount: null,
               priceline: { stars: 3, location: 'Disney Springs', resortFee: true },
               clues: ['Near DS', 'Budget friendly', 'Free parking'],
+              roomOnly: true,
               bookUrl: 'https://www.wyndhamhotels.com/wyndham-garden/lake-buena-vista-florida/wyndham-garden-lake-buena-vista-disney-springs-resort-area/overview' },
               
             // UNIVERSAL AREA
             { id: 'doubletree-universal', name: "DoubleTree Universal Entrance", icon: '🎢',
-              area: 'universal', type: 'partner', price: '$179+',
+              area: 'universal', type: 'partner', price: '$179+', apDiscount: null,
               priceline: { stars: 4, location: 'Universal Orlando', resortFee: true },
               clues: ['Walk to Universal', 'Free cookies', 'Near CityWalk'],
+              roomOnly: true,
               bookUrl: 'https://www.hilton.com/en/hotels/mcoundt-doubletree-by-hilton-at-the-entrance-to-universal-orlando/' },
               
             // LAKE BUENA VISTA
             { id: 'marriott-village', name: "Marriott Village Orlando", icon: '🏡',
-              area: 'lbv', type: 'partner', price: '$139+',
+              area: 'lbv', type: 'partner', price: '$139+', apDiscount: null,
               priceline: { stars: 3, location: 'Lake Buena Vista North', resortFee: false },
               clues: ['3 hotels in 1', 'Free shuttle', 'Pool'],
+              roomOnly: true,
               bookUrl: 'https://www.marriott.com/en-us/hotels/mcoov-marriott-village-at-lake-buena-vista/overview/' },
         ];
 
@@ -497,6 +654,11 @@
             document.getElementById('checkin-date').value = formatDateInput(checkin);
             document.getElementById('checkout-date').value = formatDateInput(checkout);
             
+            // Apply saved passholder mode
+            if (passholderMode) {
+                applyPassholderMode(true);
+            }
+            
             renderHotels();
             renderDealLog();
             updateCountdown();
@@ -505,6 +667,64 @@
 
         function formatDateInput(date) {
             return date.toISOString().split('T')[0];
+        }
+
+        // ===== PASSHOLDER MODE TOGGLE =====
+        function togglePassholderMode() {
+            passholderMode = !passholderMode;
+            localStorage.setItem('passholderMode', passholderMode);
+            applyPassholderMode(passholderMode);
+            renderHotels();
+            showToast(passholderMode ? '🎟️ Passholder Mode ON - Room-only deals!' : '👥 Regular Mode - All deals shown');
+        }
+
+        function applyPassholderMode(enabled) {
+            const header = document.getElementById('main-header');
+            const banner = document.getElementById('passholder-banner');
+            const indicator = document.getElementById('passholder-indicator');
+            const dot = document.getElementById('passholder-dot');
+            const label = document.getElementById('passholder-label');
+            const subtitle = document.getElementById('header-subtitle');
+            const apButtons = document.getElementById('ap-scan-buttons');
+            const apDiscounts = document.getElementById('ap-discounts-section');
+            const scanTip = document.getElementById('scan-tip');
+            const dateTip = document.getElementById('date-tip');
+            const discountHeader = document.getElementById('discount-header');
+            const hotelSubtitle = document.getElementById('hotel-subtitle');
+            
+            if (enabled) {
+                header.classList.remove('scanner-gradient');
+                header.classList.add('passholder-gradient');
+                banner.classList.remove('hidden');
+                indicator.classList.remove('bg-gray-600');
+                indicator.classList.add('bg-green-500');
+                dot.classList.remove('left-1');
+                dot.classList.add('left-7');
+                label.textContent = 'Passholder ON';
+                subtitle.textContent = 'Room-only deals for Annual Passholders';
+                apButtons.classList.remove('hidden');
+                apDiscounts.classList.remove('hidden');
+                scanTip.innerHTML = '<strong>🎟️ Passholder Tip:</strong> All deals below are ROOM-ONLY - no tickets included. Perfect for APs! Priceline/Hotwire mystery deals are also room-only.';
+                dateTip.innerHTML = '<span>💡</span><span>AP Tip: Sun-Thu stays get better discounts. Book 2+ weeks out for AP rates. Call 407-939-7675 for AP-specific pricing!</span>';
+                discountHeader.textContent = 'AP Discount';
+                hotelSubtitle.textContent = 'Disney resorts with AP discounts shown • Room-only deals only';
+            } else {
+                header.classList.add('scanner-gradient');
+                header.classList.remove('passholder-gradient');
+                banner.classList.add('hidden');
+                indicator.classList.add('bg-gray-600');
+                indicator.classList.remove('bg-green-500');
+                dot.classList.add('left-1');
+                dot.classList.remove('left-7');
+                label.textContent = 'Passholder Mode';
+                subtitle.textContent = 'Find secret hotel deals before anyone else';
+                apButtons.classList.add('hidden');
+                apDiscounts.classList.add('hidden');
+                scanTip.innerHTML = '<strong>🎯 Pro Tip:</strong> After scanning, look for hotels matching the identifiers below. Use RoomRevealer to see which mystery hotel is which!';
+                dateTip.innerHTML = '<span>💡</span><span>Tip: Check 15 days before arrival for best deals. Book on Tuesdays for 16% savings!</span>';
+                discountHeader.textContent = 'Key Clues';
+                hotelSubtitle.textContent = 'Match mystery hotels to real hotels using these clues';
+            }
         }
 
         // ===== COUNTDOWN =====
@@ -541,13 +761,25 @@
             return HOTELS.filter(h => {
                 const areaMatch = selectedArea === 'all' || h.area === selectedArea;
                 const typeMatch = selectedType === 'all' || h.type === selectedType;
+                // In passholder mode, only show room-only deals (which is all of them in this case)
+                // But prioritize Disney resorts with AP discounts
                 return areaMatch && typeMatch;
             });
         }
 
         // ===== RENDER HOTELS =====
         function renderHotels() {
-            const hotels = getFilteredHotels();
+            let hotels = getFilteredHotels();
+            
+            // In passholder mode, sort by AP discount (highest first)
+            if (passholderMode) {
+                hotels = hotels.sort((a, b) => {
+                    if (a.apDiscount && !b.apDiscount) return -1;
+                    if (!a.apDiscount && b.apDiscount) return 1;
+                    return 0;
+                });
+            }
+            
             document.getElementById('hotel-count').textContent = hotels.length;
             
             const container = document.getElementById('hotel-list');
@@ -561,7 +793,10 @@
                     <div class="col-span-3 flex items-center gap-3">
                         <span class="text-2xl">${h.icon}</span>
                         <div>
-                            <div class="font-bold text-gray-900">${h.name}</div>
+                            <div class="font-bold text-gray-900 flex items-center gap-2">
+                                ${h.name}
+                                ${h.roomOnly ? '<span class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Room Only</span>' : ''}
+                            </div>
                             <div class="text-xs text-gray-500">${h.type.charAt(0).toUpperCase() + h.type.slice(1)}</div>
                         </div>
                     </div>
@@ -572,18 +807,28 @@
                     </div>
                     <div class="col-span-2 text-sm text-gray-600">${h.priceline.location}</div>
                     <div class="col-span-2">
-                        <div class="flex flex-wrap gap-1">
-                            ${h.priceline.resortFee 
-                                ? `<span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded">Fee ${h.priceline.feeAmount || ''}</span>` 
-                                : `<span class="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded font-bold">NO Fee ✓</span>`}
-                            ${h.priceline.hint ? `<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">${h.priceline.hint}</span>` : ''}
-                        </div>
+                        ${passholderMode ? `
+                            ${h.apDiscount ? `
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-800 border border-amber-300">
+                                    🎟️ ${h.apDiscount}
+                                </span>
+                            ` : `
+                                <span class="text-xs text-gray-400">No AP discount</span>
+                            `}
+                        ` : `
+                            <div class="flex flex-wrap gap-1">
+                                ${h.priceline.resortFee 
+                                    ? `<span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded">Fee ${h.priceline.feeAmount || ''}</span>` 
+                                    : `<span class="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded font-bold">NO Fee ✓</span>`}
+                                ${h.priceline.hint ? `<span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">${h.priceline.hint}</span>` : ''}
+                            </div>
+                        `}
                     </div>
                     <div class="col-span-1 font-bold text-green-600">${h.price}</div>
                     <div class="col-span-2 text-right">
                         <button onclick="event.stopPropagation(); window.open('${h.bookUrl}', '_blank')" 
-                            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                            Book Direct →
+                            class="${passholderMode && h.apDiscount ? 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600' : 'bg-purple-600 hover:bg-purple-700'} text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                            ${passholderMode && h.apDiscount ? '🎟️ Book AP Rate' : 'Book Direct →'}
                         </button>
                     </div>
                 </div>
@@ -618,10 +863,7 @@
         function scanRoomRevealer() {
             const dates = getSearchDates();
             if (!dates) return;
-            
-            // RoomRevealer uses location-based search
-            const area = getAreaSearchTerm().replace(/, FL$/, '').toLowerCase().replace(/ /g, '-');
-            const url = `https://roomrevealer.com/${area.includes('disney') ? 'orlando_fl' : 'orlando_fl'}/`;
+            const url = `https://roomrevealer.com/orlando_fl/`;
             window.open(url, '_blank');
             showToast('🔮 Opening RoomRevealer...');
         }
@@ -629,7 +871,6 @@
         function scanPriceline() {
             const dates = getSearchDates();
             if (!dates) return;
-            
             const destination = encodeURIComponent(getAreaSearchTerm());
             const url = `https://www.priceline.com/stay/search/hotels/?destination=${destination}&rooms=${dates.rooms}&adults=${dates.guests}&checkin=${dates.checkin}&checkout=${dates.checkout}&express=1`;
             window.open(url, '_blank');
@@ -639,14 +880,11 @@
         function scanHotwire() {
             const dates = getSearchDates();
             if (!dates) return;
-            
             const destination = encodeURIComponent(getAreaSearchTerm());
-            // Format dates for Hotwire (MM/DD/YY)
             const ci = new Date(dates.checkin);
             const co = new Date(dates.checkout);
             const ciStr = `${ci.getMonth()+1}/${ci.getDate()}/${ci.getFullYear().toString().slice(-2)}`;
             const coStr = `${co.getMonth()+1}/${co.getDate()}/${co.getFullYear().toString().slice(-2)}`;
-            
             const url = `https://www.hotwire.com/hotels/search?destination=${destination}&startDate=${ciStr}&endDate=${coStr}&rooms=${dates.rooms}&adults=${dates.guests}`;
             window.open(url, '_blank');
             showToast('🔥 Opening Hotwire Hot Rates...');
@@ -655,7 +893,6 @@
         function scanAll() {
             const dates = getSearchDates();
             if (!dates) return;
-            
             showToast('⚡ Opening all 3 sites...');
             setTimeout(() => scanRoomRevealer(), 0);
             setTimeout(() => scanPriceline(), 500);
@@ -681,7 +918,8 @@
                 source: document.getElementById('deal-source').value,
                 dates: document.getElementById('deal-dates').value,
                 notes: document.getElementById('deal-notes').value,
-                timestamp: new Date().toLocaleString()
+                timestamp: new Date().toLocaleString(),
+                passholder: passholderMode
             };
             
             if (!deal.hotel || !deal.price) {
@@ -695,7 +933,6 @@
             hideAddDealModal();
             showToast('✅ Deal saved!');
             
-            // Clear form
             document.getElementById('deal-hotel').value = '';
             document.getElementById('deal-price').value = '';
             document.getElementById('deal-dates').value = '';
@@ -720,6 +957,7 @@
                 <div class="bg-gray-50 rounded-xl p-4 flex items-start gap-4 animate-in">
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-1">
+                            ${d.passholder ? '<span class="text-lg">🎟️</span>' : ''}
                             <span class="font-bold text-gray-900">${escHtml(d.hotel)}</span>
                             <span class="text-lg font-bold text-green-600">${escHtml(d.price)}</span>
                         </div>
@@ -745,7 +983,6 @@
             setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 2500);
         }
 
-        // Keyboard shortcuts
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') hideAddDealModal();
         });
