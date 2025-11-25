@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disney Deal Tracker - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .stat-card { transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-4px); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .live-indicator { animation: pulse 2s infinite; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-black">Disney Deal Tracker Admin</h1>
+                    <p class="text-blue-100">Real-time analytics and user management</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+                        <div class="w-2 h-2 bg-green-400 rounded-full live-indicator"></div>
+                        <span class="text-sm font-semibold">LIVE</span>
+                    </div>
+                    <button onclick="refreshData()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-semibold transition">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Overview -->
+    <section class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Users -->
+            <div class="stat-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-500 text-sm font-medium">Total Users</span>
+                    <span class="text-2xl">👥</span>
+                </div>
+                <div id="stat-users" class="text-4xl font-black text-gray-900 mb-1">---</div>
+                <div class="text-xs text-green-600 font-semibold">+12 this week</div>
+            </div>
+
+            <!-- Active Alerts -->
+            <div class="stat-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-500 text-sm font-medium">Active Alerts</span>
+                    <span class="text-2xl">🔔</span>
+                </div>
+                <div id="stat-alerts" class="text-4xl font-black text-blue-600 mb-1">---</div>
+                <div class="text-xs text-gray-500">Monitoring 24/7</div>
+            </div>
+
+            <!-- Total Savings -->
+            <div class="stat-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-500 text-sm font-medium">Total Savings</span>
+                    <span class="text-2xl">💰</span>
+                </div>
+                <div id="stat-savings" class="text-4xl font-black text-green-600 mb-1">$---</div>
+                <div class="text-xs text-gray-500">Platform-wide</div>
+            </div>
+
+            <!-- Alerts Sent 24h -->
+            <div class="stat-card bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-500 text-sm font-medium">Alerts Sent (24h)</span>
+                    <span class="text-2xl">📧</span>
+                </div>
+                <div id="stat-sent" class="text-4xl font-black text-purple-600 mb-1">---</div>
+                <div class="text-xs text-gray-500">Last day</div>
+            </div>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4 text-white flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold">Recent Alerts</h2>
+                    <p class="text-gray-300 text-sm">Last 20 price alerts created</p>
+                </div>
+                <button onclick="exportAlerts()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                    📥 Export CSV
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Hotel</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Target Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Created</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alerts-table" class="divide-y">
+                        <tr>
+                            <td colspan="7" class="px-6 py-8 text-center text-gray-400">
+                                <div class="animate-pulse">Loading alerts...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- User List -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold">Users</h2>
+                    <p class="text-blue-100 text-sm">All registered users</p>
+                </div>
+                <button onclick="exportUsers()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                    📥 Export CSV
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Passholder</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Savings</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Alerts</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table" class="divide-y">
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                                <div class="animate-pulse">Loading users...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        const SUPABASE_URL = 'https://kteobfyferrukqeolofj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0ZW9iZnlmZXJydWtxZW9sb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxOTcyNjYsImV4cCI6MjA3NzU1NzI2Nn0.uy-jlF_z6qVb8qogsNyGDLHqT4HhmdRhLrW7zPv3qhY';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadAlerts();
+            loadUsers();
+            // Auto-refresh every 30 seconds
+            setInterval(refreshData, 30000);
+        });
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/admin_stats`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    const stats = data[0];
+                    document.getElementById('stat-users').textContent = (stats.total_users || 0).toLocaleString();
+                    document.getElementById('stat-alerts').textContent = (stats.active_alerts || 0).toLocaleString();
+                    document.getElementById('stat-savings').textContent = '$' + (stats.total_savings_platform || 0).toLocaleString();
+                    document.getElementById('stat-sent').textContent = (stats.alerts_sent_24h || 0).toLocaleString();
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load alerts
+        async function loadAlerts() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/price_alerts?select=*&order=created_at.desc&limit=20`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                const alerts = await response.json();
+                
+                const tbody = document.getElementById('alerts-table');
+                if (alerts && alerts.length > 0) {
+                    tbody.innerHTML = alerts.map(alert => `
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-sm text-gray-900">${alert.email}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">${alert.hotel_name}</td>
+                            <td class="px-6 py-4 text-sm">
+                                ${alert.is_passholder 
+                                    ? '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-semibold">🎟️ AP</span>'
+                                    : '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-semibold">Regular</span>'}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">
+                                ${alert.target_price ? '$' + alert.target_price : 'Any price'}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                ${alert.is_active 
+                                    ? '<span class="text-green-600 font-semibold">● Active</span>'
+                                    : '<span class="text-gray-400">○ Inactive</span>'}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">${new Date(alert.created_at).toLocaleDateString()}</td>
+                            <td class="px-6 py-4 text-sm text-right">
+                                <button onclick="toggleAlert('${alert.id}', ${!alert.is_active})" 
+                                        class="text-blue-600 hover:text-blue-800 font-semibold">
+                                    ${alert.is_active ? 'Pause' : 'Activate'}
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-400">No alerts yet</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+                document.getElementById('alerts-table').innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-red-500">Error loading alerts</td></tr>';
+            }
+        }
+
+        // Load users
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?select=*&order=created_at.desc&limit=50`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                const users = await response.json();
+                
+                const tbody = document.getElementById('users-table');
+                if (users && users.length > 0) {
+                    tbody.innerHTML = users.map(user => `
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 text-sm text-gray-900">${user.email}</td>
+                            <td class="px-6 py-4 text-sm">
+                                ${user.is_passholder 
+                                    ? '<span class="text-yellow-600 font-semibold">🎟️ Yes</span>'
+                                    : '<span class="text-gray-400">No</span>'}
+                            </td>
+                            <td class="px-6 py-4 text-sm font-semibold text-green-600">$${(user.total_savings || 0).toLocaleString()}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">${user.alerts_received || 0} received</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">${new Date(user.created_at).toLocaleDateString()}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">No users yet</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('users-table').innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-red-500">Error loading users</td></tr>';
+            }
+        }
+
+        // Toggle alert status
+        async function toggleAlert(alertId, newStatus) {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/price_alerts?id=eq.${alertId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ is_active: newStatus })
+                });
+                
+                if (response.ok) {
+                    showToast(newStatus ? 'Alert activated' : 'Alert paused');
+                    loadAlerts();
+                }
+            } catch (error) {
+                console.error('Error toggling alert:', error);
+                showToast('Error updating alert', 'error');
+            }
+        }
+
+        // Refresh all data
+        function refreshData() {
+            loadStats();
+            loadAlerts();
+            loadUsers();
+            showToast('Data refreshed');
+        }
+
+        // Export alerts to CSV
+        function exportAlerts() {
+            showToast('Export feature coming soon!');
+        }
+
+        // Export users to CSV
+        function exportUsers() {
+            showToast('Export feature coming soon!');
+        }
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-xl shadow-2xl text-white font-semibold z-50 ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
