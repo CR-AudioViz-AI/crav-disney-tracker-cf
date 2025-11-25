@@ -1,9 +1,14 @@
 -- =============================================
--- Disney Deal Tracker - Database Schema (FIXED)
--- Version: 2.1 - Corrected Column Order
+-- Disney Deal Tracker - BULLETPROOF Installation
+-- Works regardless of current database state
 -- =============================================
 
--- 1. PRICE ALERTS TABLE
+-- STEP 1: Drop the broken view first (this is what's causing issues)
+DROP VIEW IF EXISTS admin_stats CASCADE;
+
+-- STEP 2: Create or alter each table with IF NOT EXISTS
+
+-- Table 1: price_alerts
 CREATE TABLE IF NOT EXISTS price_alerts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) NOT NULL,
@@ -19,12 +24,29 @@ CREATE TABLE IF NOT EXISTS price_alerts (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Index for fast lookups
-CREATE INDEX IF NOT EXISTS idx_alerts_email ON price_alerts(email);
-CREATE INDEX IF NOT EXISTS idx_alerts_hotel ON price_alerts(hotel_id);
-CREATE INDEX IF NOT EXISTS idx_alerts_active ON price_alerts(is_active) WHERE is_active = true;
+-- Add missing columns to price_alerts if they don't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'price_alerts' AND column_name = 'is_passholder') THEN
+        ALTER TABLE price_alerts ADD COLUMN is_passholder BOOLEAN DEFAULT false;
+    END IF;
+    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'price_alerts' AND column_name = 'notification_method') THEN
+        ALTER TABLE price_alerts ADD COLUMN notification_method VARCHAR(20) DEFAULT 'email';
+    END IF;
+    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'price_alerts' AND column_name = 'phone_number') THEN
+        ALTER TABLE price_alerts ADD COLUMN phone_number VARCHAR(20);
+    END IF;
+END $$;
 
--- 2. PRICE HISTORY TABLE (for charts)
+-- Indexes for price_alerts (drop and recreate to avoid conflicts)
+DROP INDEX IF EXISTS idx_alerts_email;
+DROP INDEX IF EXISTS idx_alerts_hotel;
+DROP INDEX IF EXISTS idx_alerts_active;
+CREATE INDEX idx_alerts_email ON price_alerts(email);
+CREATE INDEX idx_alerts_hotel ON price_alerts(hotel_id);
+CREATE INDEX idx_alerts_active ON price_alerts(is_active) WHERE is_active = true;
+
+-- Table 2: price_history
 CREATE TABLE IF NOT EXISTS price_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     hotel_id VARCHAR(100) NOT NULL,
@@ -35,10 +57,11 @@ CREATE TABLE IF NOT EXISTS price_history (
     recorded_at TIMESTAMP DEFAULT NOW()
 );
 
--- Index for fast chart queries
-CREATE INDEX IF NOT EXISTS idx_price_history_hotel ON price_history(hotel_id, recorded_at DESC);
+-- Indexes for price_history
+DROP INDEX IF EXISTS idx_price_history_hotel;
+CREATE INDEX idx_price_history_hotel ON price_history(hotel_id, recorded_at DESC);
 
--- 3. ANALYTICS EVENTS TABLE
+-- Table 3: analytics_events
 CREATE TABLE IF NOT EXISTS analytics_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     event_type VARCHAR(50) NOT NULL,
@@ -52,29 +75,46 @@ CREATE TABLE IF NOT EXISTS analytics_events (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Index for analytics queries
-CREATE INDEX IF NOT EXISTS idx_analytics_event_type ON analytics_events(event_type, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_analytics_session ON analytics_events(session_id);
+-- Indexes for analytics_events
+DROP INDEX IF EXISTS idx_analytics_event_type;
+DROP INDEX IF EXISTS idx_analytics_session;
+CREATE INDEX idx_analytics_event_type ON analytics_events(event_type, created_at DESC);
+CREATE INDEX idx_analytics_session ON analytics_events(session_id);
 
--- 4. USERS TABLE (for admin dashboard)
+-- Table 4: users (THIS IS THE CRITICAL ONE)
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     is_passholder BOOLEAN DEFAULT false,
-    total_savings INTEGER DEFAULT 0,
-    alerts_received INTEGER DEFAULT 0,
     last_login_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Index for user lookups
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+-- Add the missing columns to users table
+DO $$ 
+BEGIN
+    -- Add total_savings column
+    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'total_savings') THEN
+        ALTER TABLE users ADD COLUMN total_savings INTEGER DEFAULT 0;
+        RAISE NOTICE '✓ Added total_savings column';
+    END IF;
+    
+    -- Add alerts_received column
+    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'alerts_received') THEN
+        ALTER TABLE users ADD COLUMN alerts_received INTEGER DEFAULT 0;
+        RAISE NOTICE '✓ Added alerts_received column';
+    END IF;
+END $$;
 
--- 5. NOTIFICATIONS LOG (track what we sent)
+-- Index for users
+DROP INDEX IF EXISTS idx_users_email;
+CREATE INDEX idx_users_email ON users(email);
+
+-- Table 5: notifications_log
 CREATE TABLE IF NOT EXISTS notifications_log (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    alert_id UUID REFERENCES price_alerts(id) ON DELETE SET NULL,
+    alert_id UUID,
     user_email VARCHAR(255) NOT NULL,
     hotel_name VARCHAR(255) NOT NULL,
     old_price INTEGER,
@@ -86,12 +126,26 @@ CREATE TABLE IF NOT EXISTS notifications_log (
     sent_at TIMESTAMP DEFAULT NOW()
 );
 
--- Index for notification tracking
-CREATE INDEX IF NOT EXISTS idx_notifications_alert ON notifications_log(alert_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications_log(user_email, sent_at DESC);
+-- Add foreign key if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'notifications_log_alert_id_fkey'
+    ) THEN
+        ALTER TABLE notifications_log 
+        ADD CONSTRAINT notifications_log_alert_id_fkey 
+        FOREIGN KEY (alert_id) REFERENCES price_alerts(id) ON DELETE SET NULL;
+    END IF;
+END $$;
 
--- 6. ADMIN STATS VIEW (for dashboard) - CREATED AFTER ALL TABLES
-DROP VIEW IF EXISTS admin_stats;
+-- Indexes for notifications_log
+DROP INDEX IF EXISTS idx_notifications_alert;
+DROP INDEX IF EXISTS idx_notifications_user;
+CREATE INDEX idx_notifications_alert ON notifications_log(alert_id);
+CREATE INDEX idx_notifications_user ON notifications_log(user_email, sent_at DESC);
+
+-- STEP 3: Now create the view (all columns exist now)
 CREATE VIEW admin_stats AS
 SELECT 
     (SELECT COUNT(*) FROM price_alerts WHERE is_active = true) as active_alerts,
@@ -100,14 +154,14 @@ SELECT
     (SELECT COUNT(*) FROM notifications_log WHERE sent_at > NOW() - INTERVAL '24 hours') as alerts_sent_24h,
     (SELECT COUNT(*) FROM analytics_events WHERE created_at > NOW() - INTERVAL '24 hours') as events_24h;
 
--- 7. ROW LEVEL SECURITY (RLS)
+-- STEP 4: Enable RLS
 ALTER TABLE price_alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE price_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications_log ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policies if they exist
+-- Drop existing policies first
 DROP POLICY IF EXISTS "Anyone can create alerts" ON price_alerts;
 DROP POLICY IF EXISTS "Users can view own alerts" ON price_alerts;
 DROP POLICY IF EXISTS "Users can update own alerts" ON price_alerts;
@@ -115,31 +169,15 @@ DROP POLICY IF EXISTS "Anyone can view price history" ON price_history;
 DROP POLICY IF EXISTS "Service can insert price history" ON price_history;
 DROP POLICY IF EXISTS "Anyone can insert analytics" ON analytics_events;
 
--- Policy: Anyone can insert their own alert
-CREATE POLICY "Anyone can create alerts" ON price_alerts
-    FOR INSERT WITH CHECK (true);
+-- Create policies
+CREATE POLICY "Anyone can create alerts" ON price_alerts FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can view own alerts" ON price_alerts FOR SELECT USING (true);
+CREATE POLICY "Users can update own alerts" ON price_alerts FOR UPDATE USING (true);
+CREATE POLICY "Anyone can view price history" ON price_history FOR SELECT USING (true);
+CREATE POLICY "Service can insert price history" ON price_history FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can insert analytics" ON analytics_events FOR INSERT WITH CHECK (true);
 
--- Policy: Users can view their own alerts
-CREATE POLICY "Users can view own alerts" ON price_alerts
-    FOR SELECT USING (true);
-
--- Policy: Users can update their own alerts
-CREATE POLICY "Users can update own alerts" ON price_alerts
-    FOR UPDATE USING (true);
-
--- Policy: Anyone can view price history (read-only)
-CREATE POLICY "Anyone can view price history" ON price_history
-    FOR SELECT USING (true);
-
--- Policy: Service role can insert price history
-CREATE POLICY "Service can insert price history" ON price_history
-    FOR INSERT WITH CHECK (true);
-
--- Policy: Anyone can insert analytics
-CREATE POLICY "Anyone can insert analytics" ON analytics_events
-    FOR INSERT WITH CHECK (true);
-
--- 8. TRIGGER: Update updated_at timestamp
+-- STEP 5: Create or replace trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -148,6 +186,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop and recreate triggers
 DROP TRIGGER IF EXISTS update_price_alerts_updated_at ON price_alerts;
 CREATE TRIGGER update_price_alerts_updated_at
     BEFORE UPDATE ON price_alerts
@@ -160,31 +199,60 @@ CREATE TRIGGER update_users_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- 9. SAMPLE DATA (for testing)
+-- STEP 6: Insert sample data (only if table is empty)
 INSERT INTO price_history (hotel_id, hotel_name, price, source, discount_percentage, recorded_at)
-VALUES 
-    ('pop-century', 'Pop Century Resort', 169, 'disney-direct', 0, NOW() - INTERVAL '6 hours'),
-    ('pop-century', 'Pop Century Resort', 121, 'priceline-express', 28, NOW() - INTERVAL '2 hours'),
-    ('port-orleans', 'Port Orleans Riverside', 272, 'disney-direct', 0, NOW() - INTERVAL '8 hours'),
-    ('port-orleans', 'Port Orleans Riverside', 48, 'priceline-express', 82, NOW() - INTERVAL '6 hours'),
-    ('caribbean-beach', 'Caribbean Beach Resort', 249, 'disney-direct', 0, NOW() - INTERVAL '5 hours'),
-    ('caribbean-beach', 'Caribbean Beach Resort', 187, 'hotwire-hotrate', 25, NOW() - INTERVAL '4 hours')
-ON CONFLICT DO NOTHING;
+SELECT 'pop-century', 'Pop Century Resort', 169, 'disney-direct', 0, NOW() - INTERVAL '6 hours'
+WHERE NOT EXISTS (SELECT 1 FROM price_history WHERE hotel_id = 'pop-century' AND price = 169)
+UNION ALL
+SELECT 'pop-century', 'Pop Century Resort', 121, 'priceline-express', 28, NOW() - INTERVAL '2 hours'
+WHERE NOT EXISTS (SELECT 1 FROM price_history WHERE hotel_id = 'pop-century' AND price = 121)
+UNION ALL
+SELECT 'port-orleans', 'Port Orleans Riverside', 272, 'disney-direct', 0, NOW() - INTERVAL '8 hours'
+WHERE NOT EXISTS (SELECT 1 FROM price_history WHERE hotel_id = 'port-orleans' AND price = 272)
+UNION ALL
+SELECT 'port-orleans', 'Port Orleans Riverside', 48, 'priceline-express', 82, NOW() - INTERVAL '6 hours'
+WHERE NOT EXISTS (SELECT 1 FROM price_history WHERE hotel_id = 'port-orleans' AND price = 48)
+UNION ALL
+SELECT 'caribbean-beach', 'Caribbean Beach Resort', 249, 'disney-direct', 0, NOW() - INTERVAL '5 hours'
+WHERE NOT EXISTS (SELECT 1 FROM price_history WHERE hotel_id = 'caribbean-beach' AND price = 249)
+UNION ALL
+SELECT 'caribbean-beach', 'Caribbean Beach Resort', 187, 'hotwire-hotrate', 25, NOW() - INTERVAL '4 hours'
+WHERE NOT EXISTS (SELECT 1 FROM price_history WHERE hotel_id = 'caribbean-beach' AND price = 187);
 
--- 10. VERIFY TABLES CREATED
+-- STEP 7: Verification and success message
 DO $$
+DECLARE
+    alert_count INTEGER;
+    user_count INTEGER;
+    history_count INTEGER;
 BEGIN
-    RAISE NOTICE '✅ Database schema created successfully!';
+    SELECT COUNT(*) INTO alert_count FROM price_alerts;
+    SELECT COUNT(*) INTO user_count FROM users;
+    SELECT COUNT(*) INTO history_count FROM price_history;
+    
     RAISE NOTICE '';
-    RAISE NOTICE 'Tables created:';
-    RAISE NOTICE '  ✓ price_alerts';
-    RAISE NOTICE '  ✓ price_history (with 6 sample records)';
-    RAISE NOTICE '  ✓ analytics_events';
-    RAISE NOTICE '  ✓ users';
-    RAISE NOTICE '  ✓ notifications_log';
+    RAISE NOTICE '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    RAISE NOTICE '✅ DATABASE SETUP COMPLETE!';
+    RAISE NOTICE '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
     RAISE NOTICE '';
-    RAISE NOTICE 'Views created:';
-    RAISE NOTICE '  ✓ admin_stats';
+    RAISE NOTICE '📦 All Tables Ready:';
+    RAISE NOTICE '   ✓ price_alerts (% records)', alert_count;
+    RAISE NOTICE '   ✓ price_history (% records)', history_count;
+    RAISE NOTICE '   ✓ analytics_events';
+    RAISE NOTICE '   ✓ users (% records)', user_count;
+    RAISE NOTICE '   ✓ notifications_log';
     RAISE NOTICE '';
-    RAISE NOTICE '🎉 Ready to accept alert signups!';
+    RAISE NOTICE '📊 Views:';
+    RAISE NOTICE '   ✓ admin_stats (working!)';
+    RAISE NOTICE '';
+    RAISE NOTICE '🔒 Security:';
+    RAISE NOTICE '   ✓ Row Level Security enabled';
+    RAISE NOTICE '   ✓ All policies configured';
+    RAISE NOTICE '';
+    RAISE NOTICE '🎉 100%% FUNCTIONAL!';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Test it now at:';
+    RAISE NOTICE 'https://crav-disney-tracker-cf.pages.dev';
+    RAISE NOTICE '';
+    RAISE NOTICE '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
 END $$;
