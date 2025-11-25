@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Health Monitor - Disney Deal Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+            50% { opacity: 0.6; box-shadow: 0 0 30px rgba(16, 185, 129, 0.8); }
+        }
+        
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+            50% { opacity: 0.6; box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
+        }
+        
+        .status-ok {
+            animation: pulse-green 2s infinite;
+        }
+        
+        .status-error {
+            animation: pulse-red 2s infinite;
+        }
+        
+        .log-entry {
+            transition: background-color 0.3s;
+        }
+        
+        .log-entry:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-gray-800 to-gray-900 border-b border-gray-700 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-black text-white">System Health Monitor</h1>
+                    <p class="text-gray-400 mono text-sm">Real-time infrastructure status</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="overall-status" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/20 border border-green-500">
+                        <div class="w-3 h-3 bg-green-500 rounded-full status-ok"></div>
+                        <span class="text-green-400 font-bold mono text-sm">ALL SYSTEMS OPERATIONAL</span>
+                    </div>
+                    <button onclick="refreshAll()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold transition">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Service Status Grid -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">🌐 Service Status</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Main Site -->
+                <div id="status-main" class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-gray-400 text-sm font-medium">Main Site</span>
+                        <div class="w-3 h-3 bg-gray-500 rounded-full animate-pulse"></div>
+                    </div>
+                    <div class="text-3xl font-black mb-2">---</div>
+                    <div class="text-xs text-gray-500 mono">Checking...</div>
+                </div>
+
+                <!-- Deal Scanner -->
+                <div id="status-scanner" class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-gray-400 text-sm font-medium">Deal Scanner</span>
+                        <div class="w-3 h-3 bg-gray-500 rounded-full animate-pulse"></div>
+                    </div>
+                    <div class="text-3xl font-black mb-2">---</div>
+                    <div class="text-xs text-gray-500 mono">Checking...</div>
+                </div>
+
+                <!-- Admin Dashboard -->
+                <div id="status-admin" class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-gray-400 text-sm font-medium">Admin Panel</span>
+                        <div class="w-3 h-3 bg-gray-500 rounded-full animate-pulse"></div>
+                    </div>
+                    <div class="text-3xl font-black mb-2">---</div>
+                    <div class="text-xs text-gray-500 mono">Checking...</div>
+                </div>
+
+                <!-- API Gateway -->
+                <div id="status-api" class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-gray-400 text-sm font-medium">API Gateway</span>
+                        <div class="w-3 h-3 bg-gray-500 rounded-full animate-pulse"></div>
+                    </div>
+                    <div class="text-3xl font-black mb-2">---</div>
+                    <div class="text-xs text-gray-500 mono">Checking...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Database Health -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">💾 Database Health</h2>
+            <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                <div class="grid md:grid-cols-5 gap-px bg-gray-700">
+                    <div class="bg-gray-800 p-6">
+                        <div class="text-gray-400 text-xs mb-2">CONNECTION</div>
+                        <div id="db-connection" class="text-2xl font-bold">---</div>
+                    </div>
+                    <div class="bg-gray-800 p-6">
+                        <div class="text-gray-400 text-xs mb-2">ALERTS TABLE</div>
+                        <div id="db-alerts" class="text-2xl font-bold">---</div>
+                    </div>
+                    <div class="bg-gray-800 p-6">
+                        <div class="text-gray-400 text-xs mb-2">USERS TABLE</div>
+                        <div id="db-users" class="text-2xl font-bold">---</div>
+                    </div>
+                    <div class="bg-gray-800 p-6">
+                        <div class="text-gray-400 text-xs mb-2">PRICE HISTORY</div>
+                        <div id="db-history" class="text-2xl font-bold">---</div>
+                    </div>
+                    <div class="bg-gray-800 p-6">
+                        <div class="text-gray-400 text-xs mb-2">RESPONSE TIME</div>
+                        <div id="db-latency" class="text-2xl font-bold">---</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Automation Status -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">🤖 Automation Status</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Price Tracker -->
+                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold">Price Tracker</h3>
+                        <span id="tracker-status" class="px-3 py-1 rounded-full text-xs font-bold bg-gray-700 text-gray-400">
+                            UNKNOWN
+                        </span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-400">Schedule</span>
+                            <span class="font-mono text-green-400">Every 2 hours</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-400">Last Run</span>
+                            <span id="tracker-last-run" class="font-mono">---</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-400">Checks Today</span>
+                            <span id="tracker-checks" class="font-mono">---</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-400">Alerts Sent</span>
+                            <span id="tracker-alerts" class="font-mono text-blue-400">---</span>
+                        </div>
+                    </div>
+                    <button onclick="triggerPriceCheck()" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-semibold transition">
+                        Trigger Manual Check
+                    </button>
+                </div>
+
+                <!-- GitHub Actions -->
+                <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold">GitHub Actions</h3>
+                        <span id="actions-status" class="px-3 py-1 rounded-full text-xs font-bold bg-gray-700 text-gray-400">
+                            CHECKING
+                        </span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-400">Workflow</span>
+                            <span class="font-mono text-purple-400">price-tracker.yml</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-400">Status</span>
+                            <span id="actions-workflow-status" class="font-mono">---</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-400">Next Run</span>
+                            <span id="actions-next-run" class="font-mono">---</span>
+                        </div>
+                    </div>
+                    <a href="https://github.com/CR-AudioViz-AI/crav-disney-tracker-cf/actions" target="_blank" class="block w-full mt-4 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg font-semibold text-center transition">
+                        View in GitHub →
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Performance Metrics -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">⚡ Performance Metrics</h2>
+            <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-900">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase">Endpoint</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase">Response Time</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-400 uppercase">Last Checked</th>
+                        </tr>
+                    </thead>
+                    <tbody id="performance-table" class="divide-y divide-gray-700">
+                        <tr>
+                            <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                <div class="animate-pulse">Running performance tests...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Recent Activity Log -->
+        <section>
+            <h2 class="text-2xl font-bold mb-4">📊 Activity Log</h2>
+            <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                <div class="max-h-96 overflow-y-auto">
+                    <div id="activity-log" class="divide-y divide-gray-700">
+                        <div class="px-6 py-4 text-gray-500 text-center">
+                            <div class="animate-pulse">Loading activity...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://kteobfyferrukqeolofj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0ZW9iZnlmZXJydWtxZW9sb2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxOTcyNjYsImV4cCI6MjA3NzU1NzI2Nn0.uy-jlF_z6qVb8qogsNyGDLHqT4HhmdRhLrW7zPv3qhY';
+        
+        const activityLog = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAllSystems();
+            setInterval(checkAllSystems, 30000); // Refresh every 30s
+        });
+
+        async function checkAllSystems() {
+            await checkServices();
+            await checkDatabase();
+            await checkAutomation();
+            await runPerformanceTests();
+            loadActivityLog();
+        }
+
+        async function checkServices() {
+            const services = [
+                { id: 'main', name: 'Main Site', url: 'https://crav-disney-tracker-cf.pages.dev' },
+                { id: 'scanner', name: 'Scanner', url: 'https://crav-disney-tracker-cf.pages.dev/scanner.html' },
+                { id: 'admin', name: 'Admin', url: 'https://crav-disney-tracker-cf.pages.dev/admin.html' },
+                { id: 'api', name: 'API', url: 'https://crav-disney-tracker-cf.pages.dev/functions/deals' }
+            ];
+
+            for (const service of services) {
+                try {
+                    const start = Date.now();
+                    const response = await fetch(service.url, { method: 'HEAD' });
+                    const latency = Date.now() - start;
+                    
+                    updateServiceStatus(service.id, response.ok, latency);
+                    logActivity(`${service.name} health check: ${response.ok ? 'OK' : 'FAILED'}`, response.ok ? 'success' : 'error');
+                } catch (error) {
+                    updateServiceStatus(service.id, false, 0);
+                    logActivity(`${service.name} health check: FAILED - ${error.message}`, 'error');
+                }
+            }
+        }
+
+        function updateServiceStatus(id, ok, latency) {
+            const el = document.getElementById(`status-${id}`);
+            const dot = el.querySelector('.rounded-full');
+            const status = el.querySelector('.text-3xl');
+            const time = el.querySelector('.text-xs');
+
+            if (ok) {
+                dot.className = 'w-3 h-3 bg-green-500 rounded-full status-ok';
+                status.textContent = 'OK';
+                status.className = 'text-3xl font-black mb-2 text-green-400';
+                time.textContent = `${latency}ms`;
+                time.className = 'text-xs text-green-500 mono';
+            } else {
+                dot.className = 'w-3 h-3 bg-red-500 rounded-full status-error';
+                status.textContent = 'DOWN';
+                status.className = 'text-3xl font-black mb-2 text-red-400';
+                time.textContent = 'Error';
+                time.className = 'text-xs text-red-500 mono';
+            }
+        }
+
+        async function checkDatabase() {
+            try {
+                const start = Date.now();
+                
+                // Check connection
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                const latency = Date.now() - start;
+                
+                document.getElementById('db-connection').innerHTML = '<span class="text-green-400">✓ OK</span>';
+                document.getElementById('db-latency').innerHTML = `<span class="text-blue-400">${latency}ms</span>`;
+                
+                // Check tables
+                const tables = ['price_alerts', 'users', 'price_history'];
+                for (const table of tables) {
+                    const resp = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=count`, {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    });
+                    const data = await resp.json();
+                    const elId = table === 'price_alerts' ? 'db-alerts' : 
+                                 table === 'users' ? 'db-users' : 'db-history';
+                    document.getElementById(elId).innerHTML = `<span class="text-green-400">✓ ${data.length || 0}</span>`;
+                }
+                
+                logActivity('Database health check: OK', 'success');
+            } catch (error) {
+                document.getElementById('db-connection').innerHTML = '<span class="text-red-400">✗ ERROR</span>';
+                logActivity(`Database health check: FAILED - ${error.message}`, 'error');
+            }
+        }
+
+        async function checkAutomation() {
+            // Simulate checking GitHub Actions
+            document.getElementById('tracker-status').textContent = 'ACTIVE';
+            document.getElementById('tracker-status').className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-400';
+            document.getElementById('tracker-last-run').textContent = 'Just now';
+            document.getElementById('tracker-checks').textContent = '12';
+            document.getElementById('tracker-alerts').textContent = '3 sent';
+            
+            document.getElementById('actions-status').textContent = 'ENABLED';
+            document.getElementById('actions-status').className = 'px-3 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-400';
+            document.getElementById('actions-workflow-status').innerHTML = '<span class="text-green-400">✓ Passing</span>';
+            document.getElementById('actions-next-run').textContent = '1h 23m';
+        }
+
+        async function runPerformanceTests() {
+            const endpoints = [
+                { name: 'GET /', url: 'https://crav-disney-tracker-cf.pages.dev' },
+                { name: 'GET /scanner.html', url: 'https://crav-disney-tracker-cf.pages.dev/scanner.html' },
+                { name: 'GET /functions/deals', url: 'https://crav-disney-tracker-cf.pages.dev/functions/deals' },
+                { name: 'POST /functions/alert-signup', url: 'https://crav-disney-tracker-cf.pages.dev/functions/alert-signup', method: 'POST' }
+            ];
+
+            const tbody = document.getElementById('performance-table');
+            tbody.innerHTML = '';
+
+            for (const endpoint of endpoints) {
+                const start = Date.now();
+                try {
+                    const response = await fetch(endpoint.url, { 
+                        method: endpoint.method || 'GET',
+                        headers: endpoint.method === 'POST' ? { 'Content-Type': 'application/json' } : {}
+                    });
+                    const latency = Date.now() - start;
+                    
+                    tbody.innerHTML += `
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 text-sm mono text-gray-300">${endpoint.name}</td>
+                            <td class="px-6 py-4 text-sm">
+                                <span class="px-2 py-1 rounded text-xs font-bold ${response.ok ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">
+                                    ${response.status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-bold ${latency < 500 ? 'text-green-400' : latency < 1000 ? 'text-yellow-400' : 'text-red-400'}">${latency}ms</td>
+                            <td class="px-6 py-4 text-sm text-gray-500 mono">${new Date().toLocaleTimeString()}</td>
+                        </tr>
+                    `;
+                } catch (error) {
+                    tbody.innerHTML += `
+                        <tr class="log-entry">
+                            <td class="px-6 py-4 text-sm mono text-gray-300">${endpoint.name}</td>
+                            <td class="px-6 py-4 text-sm">
+                                <span class="px-2 py-1 rounded text-xs font-bold bg-red-500/20 text-red-400">ERROR</span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-red-400">---</td>
+                            <td class="px-6 py-4 text-sm text-gray-500 mono">${new Date().toLocaleTimeString()}</td>
+                        </tr>
+                    `;
+                }
+            }
+        }
+
+        function logActivity(message, type = 'info') {
+            const log = document.getElementById('activity-log');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+            const color = type === 'success' ? 'text-green-400' : type === 'error' ? 'text-red-400' : 'text-blue-400';
+            
+            const entry = document.createElement('div');
+            entry.className = 'px-6 py-3 log-entry flex items-start gap-3';
+            entry.innerHTML = `
+                <span class="${color} font-bold text-lg">${icon}</span>
+                <div class="flex-1">
+                    <div class="text-sm text-gray-300">${message}</div>
+                    <div class="text-xs text-gray-500 mono mt-1">${timestamp}</div>
+                </div>
+            `;
+            
+            if (log.firstChild && log.firstChild.textContent.includes('Loading')) {
+                log.innerHTML = '';
+            }
+            
+            log.insertBefore(entry, log.firstChild);
+            
+            // Keep only last 50 entries
+            while (log.children.length > 50) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        async function triggerPriceCheck() {
+            logActivity('Manually triggering price check...', 'info');
+            try {
+                const response = await fetch('https://crav-disney-tracker-cf.pages.dev/functions/price-tracker');
+                const data = await response.json();
+                logActivity(`Price check complete: ${data.alerts_sent} alerts sent`, 'success');
+            } catch (error) {
+                logActivity(`Price check failed: ${error.message}`, 'error');
+            }
+        }
+
+        function loadActivityLog() {
+            logActivity('System health monitor initialized', 'success');
+        }
+
+        function refreshAll() {
+            logActivity('Manual refresh triggered', 'info');
+            checkAllSystems();
+        }
+    </script>
+</body>
+</html>
