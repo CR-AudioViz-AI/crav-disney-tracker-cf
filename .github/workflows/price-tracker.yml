@@ -1,0 +1,89 @@
+name: Price Tracker Automation
+
+# Runs every 2 hours, 24/7
+on:
+  schedule:
+    # Every 2 hours: 0 */2 * * *
+    # At 6am, 10am, 2pm, 6pm, 10pm EST: 0 11,15,19,23,3 * * *
+    - cron: '0 */2 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  check-prices:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Check price drops and send alerts
+        run: |
+          echo "🔍 Checking for price drops..."
+          
+          RESPONSE=$(curl -s -X GET \
+            "https://crav-disney-tracker-cf.pages.dev/functions/price-tracker" \
+            -H "Content-Type: application/json")
+          
+          echo "$RESPONSE"
+          
+          # Parse results
+          CHECKED=$(echo "$RESPONSE" | jq -r '.checked // 0')
+          ALERTS_SENT=$(echo "$RESPONSE" | jq -r '.alerts_sent // 0')
+          PRICE_DROPS=$(echo "$RESPONSE" | jq -r '.price_drops // 0')
+          
+          echo "✅ Checked: $CHECKED alerts"
+          echo "📧 Sent: $ALERTS_SENT notifications"
+          echo "💰 Price drops found: $PRICE_DROPS"
+          
+          # Notify if errors
+          ERRORS=$(echo "$RESPONSE" | jq -r '.errors | length // 0')
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "⚠️ Errors: $ERRORS"
+            echo "$RESPONSE" | jq -r '.errors'
+          fi
+      
+      - name: Update price history
+        run: |
+          echo "📊 Recording price history..."
+          
+          # Call the deals function to update historical data
+          curl -s "https://crav-disney-tracker-cf.pages.dev/functions/deals" \
+            -H "Content-Type: application/json"
+          
+          echo "✅ Price history updated"
+      
+      - name: Health check
+        if: always()
+        run: |
+          echo "🏥 Running health checks..."
+          
+          # Check main site
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://crav-disney-tracker-cf.pages.dev")
+          if [ "$STATUS" -eq 200 ]; then
+            echo "✅ Main site: OK"
+          else
+            echo "❌ Main site: DOWN (Status: $STATUS)"
+            exit 1
+          fi
+          
+          # Check API
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://crav-disney-tracker-cf.pages.dev/functions/deals")
+          if [ "$STATUS" -eq 200 ]; then
+            echo "✅ API: OK"
+          else
+            echo "❌ API: DOWN (Status: $STATUS)"
+            exit 1
+          fi
+          
+          echo "✅ All systems operational"
+      
+      - name: Send summary
+        if: always()
+        run: |
+          echo "📝 Price tracker run completed at $(date)"
+          echo "Next run in 2 hours"
+
+# Optional: Send notifications on failure
+# Add this if you want Slack/Discord/email alerts when the automation fails
